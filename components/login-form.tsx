@@ -1,5 +1,5 @@
 // PERHATIAN: Perbarui file `components/login-form.tsx` Anda dengan kode ini.
-// Perubahan utama: Login menggunakan Nomor Peserta, bukan email, dan menghapus link sign-up.
+// Perubahan: Menambahkan notifikasi sukses saat login berhasil.
 
 "use client";
 
@@ -18,15 +18,16 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { CheckCircle, AlertTriangle, Loader2 } from "lucide-react"; // Import ikon
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  // State diubah dari 'email' menjadi 'participantNumber' untuk kejelasan.
   const [participantNumber, setParticipantNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  // State notifikasi digabung untuk error dan sukses
+  const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -34,34 +35,35 @@ export function LoginForm({
     e.preventDefault();
     const supabase = createClient();
     setIsLoading(true);
-    setError(null);
+    setMessage(null); // Reset pesan setiap kali login dicoba
 
     try {
-      // --- PERUBAHAN DI SINI ---
-      // Domain disesuaikan dengan contoh yang Anda berikan.
-      // Pastikan domain ini sama dengan yang digunakan saat membuat user di database.
       const email = `${participantNumber}@smknegeri9garut.sch.id`;
-      // -------------------------
 
       const { error } = await supabase.auth.signInWithPassword({
-        email, // Gunakan email yang sudah diformat
+        email,
         password,
       });
       if (error) throw error;
       
-      router.push("/dashboard/siswa");
+      // Tampilkan pesan sukses sebelum redirect
+      setMessage({ type: 'success', text: 'Login berhasil! Anda akan segera diarahkan.' });
+      
+      // Beri jeda 1.5 detik agar pengguna bisa membaca pesan
+      setTimeout(() => {
+          router.push("/dashboard/siswa");
+      }, 1500);
 
     } catch (error: unknown) {
-      // Memberikan pesan error yang lebih ramah
+      // Atur pesan error jika login gagal
       if (error instanceof Error && error.message.includes("Invalid login credentials")) {
-        setError("Nomor Peserta atau Password salah. Silakan coba lagi.");
+        setMessage({ type: 'error', text: "Nomor Peserta atau Password salah. Silakan coba lagi." });
       } else if (error instanceof Error) {
-        setError(error.message);
+        setMessage({ type: 'error', text: error.message });
       } else {
-        setError("Terjadi kesalahan. Silakan coba beberapa saat lagi.");
+        setMessage({ type: 'error', text: "Terjadi kesalahan. Silakan coba beberapa saat lagi." });
       }
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Hentikan loading hanya jika ada error
     }
   };
 
@@ -81,11 +83,12 @@ export function LoginForm({
                 <Label htmlFor="participantNumber">Nomor Peserta</Label>
                 <Input
                   id="participantNumber"
-                  type="text" // Diubah dari "email" menjadi "text"
+                  type="text"
                   placeholder="Contoh: 199208242020121012"
                   required
                   value={participantNumber}
                   onChange={(e) => setParticipantNumber(e.target.value)}
+                  disabled={isLoading} // Nonaktifkan input saat loading
                 />
               </div>
               <div className="grid gap-2">
@@ -105,14 +108,29 @@ export function LoginForm({
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading} // Nonaktifkan input saat loading
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+
+              {/* Tampilkan pesan notifikasi berdasarkan tipenya */}
+              {message && (
+                <div className={cn(
+                  "p-3 rounded-md flex items-center gap-3 text-sm",
+                  message.type === 'error' && "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300",
+                  message.type === 'success' && "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                )}>
+                  {message.type === 'error' && <AlertTriangle className="h-5 w-5"/>}
+                  {message.type === 'success' && <CheckCircle className="h-5 w-5"/>}
+                  <span>{message.text}</span>
+                </div>
+              )}
+
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
+                {/* Tampilkan ikon loading saat memproses */}
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {message?.type === 'success' ? 'Berhasil...' : isLoading ? 'Memverifikasi...' : 'Login'}
               </Button>
             </div>
-            {/* Link untuk Sign Up sudah dihapus */}
           </form>
         </CardContent>
       </Card>
