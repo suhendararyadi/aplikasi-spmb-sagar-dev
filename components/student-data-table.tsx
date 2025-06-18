@@ -1,5 +1,5 @@
-// PERHATIAN: Buat file baru ini di `components/student-data-table.tsx`.
-// Komponen ini akan menampilkan data dalam bentuk tabel yang interaktif.
+// PERHATIAN: Perbarui file ini di `components/student-data-table.tsx`.
+// Kode ini sekarang telah diperbaiki untuk menghilangkan semua error dan warning TypeScript.
 
 "use client";
 
@@ -14,6 +14,8 @@ import {
   getFilteredRowModel,
   SortingState,
   ColumnFiltersState,
+  // --- PERBAIKAN 1: Hapus 'Header' yang tidak digunakan ---
+  HeaderContext
 } from "@tanstack/react-table";
 
 import {
@@ -25,8 +27,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { DataTableToolbar } from "./data-table-toolbar";
+import { ArrowUpDown } from "lucide-react";
 
 // Definisikan tipe untuk data profil
 type Profile = {
@@ -34,10 +37,28 @@ type Profile = {
   full_name: string | null;
   registration_number: string | null;
   school_origin: string | null;
+  entry_path: string | null;
   accepted_major: string | null;
   status: string;
   is_reconfirm: boolean | null;
 };
+
+// Fungsi helper untuk membuat header kolom yang bisa di-sort
+const SortableHeader = <TData, TValue>(
+    // --- PERBAIKAN 3: Terima seluruh konteks ---
+    props: HeaderContext<TData, TValue>,
+    title: string
+  ) => {
+    return (
+      <Button
+        variant="ghost"
+        onClick={() => props.column.toggleSorting(props.column.getIsSorted() === "asc")}
+      >
+        {title}
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    )
+}
 
 // Definisikan kolom-kolom untuk tabel
 export const columns: ColumnDef<Profile>[] = [
@@ -47,7 +68,8 @@ export const columns: ColumnDef<Profile>[] = [
   },
   {
     accessorKey: "full_name",
-    header: "Nama Lengkap",
+    // --- PERBAIKAN 3: Kirim seluruh konteks ke helper ---
+    header: (props) => SortableHeader(props, "Nama Lengkap"),
   },
   {
     accessorKey: "school_origin",
@@ -55,7 +77,8 @@ export const columns: ColumnDef<Profile>[] = [
   },
   {
     accessorKey: "accepted_major",
-    header: "Program Keahlian",
+    // --- PERBAIKAN 3: Kirim seluruh konteks ke helper ---
+    header: (props) => SortableHeader(props, "Program Keahlian"),
   },
   {
     accessorKey: "status",
@@ -99,67 +122,61 @@ export function StudentDataTable({ data }: { data: Profile[] }) {
   });
 
   return (
-    <div className="rounded-md border">
-      <div className="p-4">
-        <Input
-          placeholder="Cari berdasarkan nama siswa..."
-          value={(table.getColumn("full_name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("full_name")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-      </div>
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
+    <div className="rounded-md border bg-card">
+      {/* --- PERBAIKAN 2: Hapus prop 'data' yang tidak dibutuhkan --- */}
+      <DataTableToolbar table={table} />
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      <div className="flex items-center justify-end space-x-2 p-4">
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  Tidak ada data ditemukan.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex items-center justify-end space-x-2 p-4 border-t">
         <Button
           variant="outline"
           size="sm"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          Previous
+          Sebelumnya
         </Button>
         <Button
           variant="outline"
@@ -167,7 +184,7 @@ export function StudentDataTable({ data }: { data: Profile[] }) {
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          Next
+          Berikutnya
         </Button>
       </div>
     </div>

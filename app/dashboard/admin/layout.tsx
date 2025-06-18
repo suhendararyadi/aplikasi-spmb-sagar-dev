@@ -4,7 +4,7 @@
 import { AuthButton } from "@/components/auth-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import Link from "next/link";
-import { School, LayoutDashboard, Users } from 'lucide-react';
+import { School } from 'lucide-react';
 
 export default function AdminLayout({
   children,
