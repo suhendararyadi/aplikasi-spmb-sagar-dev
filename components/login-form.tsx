@@ -1,5 +1,5 @@
 // PERHATIAN: Perbarui file `components/login-form.tsx` Anda dengan kode ini.
-// Perubahan: Menambahkan notifikasi sukses saat login berhasil.
+// Perubahan: Menambahkan logika pengecekan peran setelah login berhasil.
 
 "use client";
 
@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { CheckCircle, AlertTriangle, Loader2 } from "lucide-react"; // Import ikon
+import { CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 
 export function LoginForm({
   className,
@@ -26,7 +26,6 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [participantNumber, setParticipantNumber] = useState("");
   const [password, setPassword] = useState("");
-  // State notifikasi digabung untuk error dan sukses
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -35,27 +34,45 @@ export function LoginForm({
     e.preventDefault();
     const supabase = createClient();
     setIsLoading(true);
-    setMessage(null); // Reset pesan setiap kali login dicoba
+    setMessage(null);
 
     try {
       const email = `${participantNumber}@smknegeri9garut.sch.id`;
 
-      const { error } = await supabase.auth.signInWithPassword({
+      // Langkah 1: Coba login
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      if (error) throw error;
+
+      if (loginError) throw loginError;
+
+      // Jika login berhasil, tampilkan pesan sukses
+      setMessage({ type: 'success', text: 'Login berhasil! Memeriksa peran Anda...' });
+
+      // Langkah 2: Periksa peran (role) pengguna yang baru saja login
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', loginData.user.id)
+        .single();
       
-      // Tampilkan pesan sukses sebelum redirect
-      setMessage({ type: 'success', text: 'Login berhasil! Anda akan segera diarahkan.' });
+      if (profileError) {
+        // Jika gagal memeriksa peran, arahkan ke dashboard siswa sebagai default
+        console.error("Gagal memeriksa peran:", profileError);
+        router.push("/dashboard/siswa");
+        return;
+      }
+
+      // Langkah 3: Arahkan berdasarkan peran
+      const targetUrl = profile?.role === 'admin' ? '/dashboard/admin' : '/dashboard/siswa';
       
-      // Beri jeda 1.5 detik agar pengguna bisa membaca pesan
+      // Beri jeda agar notifikasi terlihat
       setTimeout(() => {
-          router.push("/dashboard/siswa");
+          router.push(targetUrl);
       }, 1500);
 
     } catch (error: unknown) {
-      // Atur pesan error jika login gagal
       if (error instanceof Error && error.message.includes("Invalid login credentials")) {
         setMessage({ type: 'error', text: "Nomor Peserta atau Password salah. Silakan coba lagi." });
       } else if (error instanceof Error) {
@@ -63,7 +80,7 @@ export function LoginForm({
       } else {
         setMessage({ type: 'error', text: "Terjadi kesalahan. Silakan coba beberapa saat lagi." });
       }
-      setIsLoading(false); // Hentikan loading hanya jika ada error
+      setIsLoading(false);
     }
   };
 
@@ -71,7 +88,7 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Login Siswa</CardTitle>
+          <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
             Masukkan Nomor Peserta dan Password Anda.
           </CardDescription>
@@ -88,7 +105,7 @@ export function LoginForm({
                   required
                   value={participantNumber}
                   onChange={(e) => setParticipantNumber(e.target.value)}
-                  disabled={isLoading} // Nonaktifkan input saat loading
+                  disabled={isLoading}
                 />
               </div>
               <div className="grid gap-2">
@@ -108,11 +125,10 @@ export function LoginForm({
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading} // Nonaktifkan input saat loading
+                  disabled={isLoading}
                 />
               </div>
 
-              {/* Tampilkan pesan notifikasi berdasarkan tipenya */}
               {message && (
                 <div className={cn(
                   "p-3 rounded-md flex items-center gap-3 text-sm",
@@ -126,7 +142,6 @@ export function LoginForm({
               )}
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {/* Tampilkan ikon loading saat memproses */}
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {message?.type === 'success' ? 'Berhasil...' : isLoading ? 'Memverifikasi...' : 'Login'}
               </Button>
