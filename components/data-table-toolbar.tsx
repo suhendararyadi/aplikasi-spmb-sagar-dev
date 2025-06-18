@@ -1,5 +1,5 @@
 // PERHATIAN: Perbarui file ini di `components/data-table-toolbar.tsx`.
-// Perubahan: Menghilangkan tipe 'any' dan properti 'data' yang tidak digunakan.
+// Menambahkan kembali fitur ekspor PDF dan Excel.
 
 "use client";
 
@@ -18,31 +18,33 @@ import {
 import { Download, SlidersHorizontal } from "lucide-react";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
-// Definisikan tipe untuk kolom-kolom yang akan diekspor
-type ExportableColumn = 'registration_number' | 'full_name' | 'school_origin' | 'accepted_major' | 'status' | 'is_reconfirm' | 'entry_path';
-
-// Buat tipe agar jsPDF-autotable mengenali 'autoTable'
-interface jsPDFWithAutoTable extends jsPDF {
-  autoTable: (options: Record<string, unknown>) => jsPDF;
-}
-
-// --- PERBAIKAN WARNING: Hapus prop 'data' yang tidak digunakan ---
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
 }
 
-// --- PERBAIKAN WARNING: Definisikan tipe yang lebih spesifik daripada 'any' ---
-type ProfileRow = Record<ExportableColumn, string | boolean | null | undefined>;
-
+// Definisikan tipe yang lebih spesifik untuk baris data profil
+type ProfileRow = {
+  registration_number: string | null;
+  full_name: string | null;
+  school_origin: string | null;
+  entry_path: string | null;
+  accepted_major: string | null;
+  status: string;
+  is_reconfirm: boolean | null;
+};
 
 export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
   
+  const statuses = [
+    { value: 'selesai', label: 'Selesai' },
+    { value: 'belum_mengisi', label: 'Belum Mengisi' },
+  ];
+
   // Fungsi untuk mengekspor data ke Excel
   const handleExportExcel = () => {
     const tableData = table.getFilteredRowModel().rows.map(row => {
-        // --- PERBAIKAN WARNING: Gunakan tipe ProfileRow yang spesifik ---
         const original = row.original as ProfileRow;
         return {
             "No. Pendaftaran": original.registration_number,
@@ -63,11 +65,10 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
 
   // Fungsi untuk mengekspor data ke PDF
   const handleExportPdf = () => {
-    const doc = new jsPDF() as jsPDFWithAutoTable;
+    const doc = new jsPDF();
     doc.text("Rekapan Data Siswa Daftar Ulang", 14, 15);
 
     const tableData = table.getFilteredRowModel().rows.map(row => {
-        // --- PERBAIKAN WARNING: Gunakan tipe ProfileRow yang spesifik ---
         const original = row.original as ProfileRow;
         return [
             original.registration_number,
@@ -78,7 +79,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         ];
     });
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 20,
       head: [['No. Pendaftaran', 'Nama Lengkap', 'Program Keahlian', 'Status', 'Konfirmasi']],
       body: tableData,
@@ -86,6 +87,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
 
     doc.save('rekap_data_siswa.pdf');
   };
+
 
   return (
     <div className="flex items-center justify-between p-4 border-b">
@@ -98,41 +100,40 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
           }
           className="max-w-sm"
         />
-        {/* Dropdown untuk filter Program Keahlian */}
+        
+        {/* Filter Status Formulir */}
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="ml-2">
                     <SlidersHorizontal className="mr-2 h-4 w-4" />
-                    Filter Jurusan
+                    Filter Status
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-                <DropdownMenuLabel>Pilih Program Keahlian</DropdownMenuLabel>
+                <DropdownMenuLabel>Pilih Status Formulir</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {['DPIB', 'TEI', 'TITL', 'TKRO', 'TKJ', 'DKV'].map(major => (
+                {statuses.map((status) => (
                     <DropdownMenuCheckboxItem
-                        key={major}
-                        className="capitalize"
-                        checked={table.getColumn("accepted_major")?.getFilterValue() === major}
-                        onCheckedChange={(value) => {
-                            const currentFilter = table.getColumn("accepted_major")?.getFilterValue();
-                            if (currentFilter === major && !value) {
-                                table.getColumn("accepted_major")?.setFilterValue(undefined);
-                            } else {
-                                table.getColumn("accepted_major")?.setFilterValue(major);
-                            }
+                        key={status.value}
+                        checked={table.getColumn("status")?.getFilterValue() === status.value}
+                        onCheckedChange={() => {
+                            const currentValue = table.getColumn("status")?.getFilterValue();
+                            table.getColumn("status")?.setFilterValue(
+                                currentValue === status.value ? undefined : status.value
+                            );
                         }}
                     >
-                        {major}
+                        {status.label}
                     </DropdownMenuCheckboxItem>
                 ))}
-                 <DropdownMenuSeparator />
-                 <DropdownMenuCheckboxItem onCheckedChange={() => table.getColumn("accepted_major")?.setFilterValue(undefined)}>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => table.getColumn("status")?.setFilterValue(undefined)}>
                     Reset Filter
-                </DropdownMenuCheckboxItem>
+                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
       {/* Tombol Ekspor */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
