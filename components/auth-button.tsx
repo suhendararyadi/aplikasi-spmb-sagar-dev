@@ -1,3 +1,6 @@
+// PERHATIAN: Perbarui file `components/auth-button.tsx`.
+// Perubahan: Mengambil nama lengkap siswa, mengubah teks, dan menghapus tombol Sign Up.
+
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { createClient } from "@/lib/supabase/server";
@@ -10,19 +13,29 @@ export async function AuthButton() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // --- LOGIKA BARU: Ambil nama lengkap dari tabel profiles ---
+  let displayName = user?.email; // Fallback jika profil tidak ditemukan
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single();
+    if (profile?.full_name) {
+      // Ambil bagian pertama dari nama jika terlalu panjang
+      displayName = profile.full_name.split(' ')[0];
+    }
+  }
+  // --- AKHIR LOGIKA BARU ---
+
   return user ? (
-    <div className="flex items-center gap-4">
-      Hey, {user.email}!
+    <div className="flex items-center gap-2">
+      <span className="hidden sm:inline">Halo, {displayName}!</span>
       <LogoutButton />
     </div>
   ) : (
-    <div className="flex gap-2">
-      <Button asChild size="sm" variant={"outline"}>
-        <Link href="/auth/login">Sign in</Link>
-      </Button>
-      <Button asChild size="sm" variant={"default"}>
-        <Link href="/auth/sign-up">Sign up</Link>
-      </Button>
-    </div>
+    <Button asChild size="sm" variant={"outline"}>
+      <Link href="/auth/login">Login</Link>
+    </Button>
   );
 }

@@ -1,3 +1,6 @@
+// PERHATIAN: Perbarui file `components/login-form.tsx` Anda dengan kode ini.
+// Perubahan utama: Login menggunakan Nomor Peserta, bukan email, dan menghapus link sign-up.
+
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -20,7 +23,8 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
+  // State diubah dari 'email' menjadi 'participantNumber' untuk kejelasan.
+  const [participantNumber, setParticipantNumber] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,15 +37,29 @@ export function LoginForm({
     setError(null);
 
     try {
+      // --- PERUBAHAN DI SINI ---
+      // Domain disesuaikan dengan contoh yang Anda berikan.
+      // Pastikan domain ini sama dengan yang digunakan saat membuat user di database.
+      const email = `${participantNumber}@smknegeri9garut.sch.id`;
+      // -------------------------
+
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email, // Gunakan email yang sudah diformat
         password,
       });
       if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/protected");
+      
+      router.push("/dashboard/siswa");
+
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      // Memberikan pesan error yang lebih ramah
+      if (error instanceof Error && error.message.includes("Invalid login credentials")) {
+        setError("Nomor Peserta atau Password salah. Silakan coba lagi.");
+      } else if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Terjadi kesalahan. Silakan coba beberapa saat lagi.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -51,23 +69,23 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">Login Siswa</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Masukkan Nomor Peserta dan Password Anda.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="participantNumber">Nomor Peserta</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
+                  id="participantNumber"
+                  type="text" // Diubah dari "email" menjadi "text"
+                  placeholder="Contoh: 199208242020121012"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={participantNumber}
+                  onChange={(e) => setParticipantNumber(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -77,12 +95,13 @@ export function LoginForm({
                     href="/auth/forgot-password"
                     className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                   >
-                    Forgot your password?
+                    Lupa password?
                   </Link>
                 </div>
                 <Input
                   id="password"
                   type="password"
+                  placeholder="Masukkan password Anda"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -93,15 +112,7 @@ export function LoginForm({
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
             </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/auth/sign-up"
-                className="underline underline-offset-4"
-              >
-                Sign up
-              </Link>
-            </div>
+            {/* Link untuk Sign Up sudah dihapus */}
           </form>
         </CardContent>
       </Card>

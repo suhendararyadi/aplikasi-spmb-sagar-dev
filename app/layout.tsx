@@ -1,3 +1,6 @@
+// PERHATIAN: Perbarui file ini di `app/layout.tsx`.
+// Perubahan utama: Judul situs, deskripsi, dan bahasa dokumen.
+
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
@@ -7,11 +10,13 @@ const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : "http://localhost:3000";
 
+// --- PERUBAHAN METADATA ---
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: "SPMB - SMKN 9 Garut",
+  description: "Sistem Penerimaan Murid Baru dan Pendaftaran Ulang SMKN 9 Garut",
 };
+// --- AKHIR PERUBAHAN ---
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,7 +30,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    // --- UBAH BAHASA ---
+    <html lang="id" suppressHydrationWarning>
       <body className={`${geistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
