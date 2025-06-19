@@ -4,7 +4,7 @@
 import { AuthButton } from "@/components/auth-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import Link from "next/link";
-import { School, LayoutDashboard, UserPlus } from 'lucide-react';
+import { School, UserPlus } from 'lucide-react';
 
 export default function AdminLayout({
   children,
@@ -23,10 +23,10 @@ export default function AdminLayout({
             </Link>
             <div className="flex items-center gap-2 md:gap-4">
                 {/* --- NAVIGASI BARU --- */}
-                <Link href="/dashboard/admin" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+                {/* <Link href="/dashboard/admin" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
                     <LayoutDashboard className="h-5 w-5" />
                     <span className="hidden md:inline">Dashboard</span>
-                </Link>
+                </Link> */}
                 <Link href="/dashboard/admin/user-management" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
                     <UserPlus className="h-5 w-5" />
                     <span className="hidden md:inline">Manajemen Pengguna</span>
@@ -45,7 +45,8 @@ export default function AdminLayout({
         <footer className="w-full border-t border-t-foreground/10 mt-auto">
             <div className="max-w-7xl mx-auto flex items-center justify-between text-center text-xs gap-8 py-8 px-5">
                 <p className="text-muted-foreground">
-                    &copy; {new Date().getFullYear()} Panitia SPMB SMKN 9 Garut
+                    &copy; {new Date().getFullYear()} Panitia SPMB SMKN 9 Garut.
+                    <span className="hidden sm:inline"> | Dibuat dengan ❤️ oleh Suhendar Aryadi</span>
                 </p>
                 <ThemeSwitcher />
             </div>
