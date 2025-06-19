@@ -1,16 +1,20 @@
 'use client';
 
+// Menggunakan hook dari 'react-dom' untuk stabilitas
 import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect, useRef } from 'react';
+
 import { addUser } from '@/app/dashboard/admin/user-management/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useEffect, useRef } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 // State awal untuk form
 const initialState = {
+  successMessage: null,
   error: null,
   data: null,
 };
@@ -26,14 +30,14 @@ function SubmitButton() {
   );
 }
 
+// Pastikan fungsi ini diekspor dengan benar
 export function AddUserForm() {
   const [state, formAction] = useFormState(addUser, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Efek untuk menampilkan notifikasi setelah form di-submit
   useEffect(() => {
-    if (state?.data) {
-      alert('Pengguna berhasil ditambahkan!');
+    if (state?.successMessage) {
+      alert(state.successMessage);
       formRef.current?.reset();
     }
   }, [state]);
@@ -41,23 +45,59 @@ export function AddUserForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Tambah Pengguna Baru</CardTitle>
+        <CardTitle>Tambah Pengguna Baru (Manual)</CardTitle>
         <CardDescription>
-          Buat akun siswa baru. Password akan secara otomatis disamakan dengan Nomor Pendaftaran.
+          Buat akun siswa baru. Siswa akan melakukan konfirmasi pendaftaran setelah login.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form ref={formRef} action={formAction} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Nama Lengkap</Label>
-            <Input id="fullName" name="fullName" placeholder="Contoh: Budi Santoso" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="registrationNumber">Nomor Pendaftaran</Label>
-            <Input id="registrationNumber" name="registrationNumber" placeholder="Contoh: 2025123456" required />
+        <form ref={formRef} action={formAction} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="registrationNumber">Nomor Pendaftaran</Label>
+              <Input id="registrationNumber" name="registrationNumber" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Nama Lengkap</Label>
+              <Input id="fullName" name="fullName" required />
+            </div>
           </div>
 
-          {/* Menampilkan pesan error jika ada */}
+          <div className="space-y-2">
+            <Label htmlFor="schoolOrigin">Asal Sekolah</Label>
+            <Input id="schoolOrigin" name="schoolOrigin" required />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+                <Label htmlFor="entryPath">Jalur Masuk</Label>
+                <Select name="entryPath" required>
+                    <SelectTrigger><SelectValue placeholder="Pilih jalur..." /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Anak Guru">Anak Guru</SelectItem>
+                        <SelectItem value="Mutasi">Mutasi</SelectItem>
+                        <SelectItem value="KETM">KETM</SelectItem>
+                        <SelectItem value="Domisili Terdekat">Domisili Terdekat</SelectItem>
+                        <SelectItem value="Persiapan Kelas Industri">Persiapan Kelas Industri</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="acceptedMajor">Program Keahlian</Label>
+                <Select name="acceptedMajor" required>
+                    <SelectTrigger><SelectValue placeholder="Pilih jurusan..." /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="DPIB">DPIB</SelectItem>
+                        <SelectItem value="TEI">TEI</SelectItem>
+                        <SelectItem value="TITL">TITL</SelectItem>
+                        <SelectItem value="TKRO">TKRO</SelectItem>
+                        <SelectItem value="TKJ">TKJ</SelectItem>
+                        <SelectItem value="DKV">DKV</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+          </div>
+
           {state?.error && (
             <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md flex items-center gap-3 text-sm">
                 <AlertCircle className="h-5 w-5"/>
@@ -65,7 +105,7 @@ export function AddUserForm() {
             </div>
           )}
 
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-4">
             <SubmitButton />
           </div>
         </form>
