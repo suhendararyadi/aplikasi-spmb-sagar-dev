@@ -1,10 +1,10 @@
-// PERHATIAN: Buat file baru ini di `app/dashboard/admin/layout.tsx`.
-// Ini akan menjadi layout khusus untuk semua halaman di bawah /admin.
+// PERHATIAN: Perbarui file ini di `app/dashboard/admin/layout.tsx`.
+// Perubahan: Menambahkan link navigasi untuk "Manajemen Pengguna".
 
 import { AuthButton } from "@/components/auth-button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import Link from "next/link";
-import { School } from 'lucide-react';
+import { School, LayoutDashboard, UserPlus } from 'lucide-react';
 
 export default function AdminLayout({
   children,
@@ -19,15 +19,23 @@ export default function AdminLayout({
           <div className="w-full max-w-7xl flex justify-between items-center p-3 px-5 text-sm">
             <Link href={"/dashboard/admin"} className="flex items-center gap-2 font-semibold hover:text-primary transition-colors">
               <School className="h-6 w-6 text-primary" />
-              <span>Admin Panel - SMKN 9 Garut</span>
+              <span className="hidden sm:inline">Admin Panel - SMKN 9 Garut</span>
             </Link>
-            <div className="flex items-center gap-4">
-                {/* Tambahkan link navigasi admin di sini jika perlu */}
+            <div className="flex items-center gap-2 md:gap-4">
+                {/* --- NAVIGASI BARU --- */}
+                <Link href="/dashboard/admin" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+                    <LayoutDashboard className="h-5 w-5" />
+                    <span className="hidden md:inline">Dashboard</span>
+                </Link>
+                <Link href="/dashboard/admin/user-management" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
+                    <UserPlus className="h-5 w-5" />
+                    <span className="hidden md:inline">Manajemen Pengguna</span>
+                </Link>
+                {/* --- AKHIR NAVIGASI --- */}
                 <AuthButton />
             </div>
           </div>
         </nav>
-        {/* --- AKHIR HEADER --- */}
         
         <div className="w-full max-w-7xl mx-auto py-10 px-5">
             {children}
@@ -42,7 +50,6 @@ export default function AdminLayout({
                 <ThemeSwitcher />
             </div>
         </footer>
-        {/* --- AKHIR FOOTER --- */}
       </div>
     </main>
   );
