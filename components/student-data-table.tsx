@@ -1,5 +1,5 @@
 // PERHATIAN: Perbarui file ini di `components/student-data-table.tsx`.
-// Kode ini sekarang telah diperbaiki untuk menghilangkan semua error dan warning TypeScript.
+// Perubahan: Mengatur default pagination menjadi 10 dan menambahkan kontrol di footer.
 
 "use client";
 
@@ -14,7 +14,6 @@ import {
   getFilteredRowModel,
   SortingState,
   ColumnFiltersState,
-  // --- PERBAIKAN 1: Hapus 'Header' yang tidak digunakan ---
   HeaderContext
 } from "@tanstack/react-table";
 
@@ -30,6 +29,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTableToolbar } from "./data-table-toolbar";
 import { ArrowUpDown } from "lucide-react";
+// Impor komponen Select untuk kontrol pagination
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Definisikan tipe untuk data profil
 type Profile = {
@@ -45,7 +52,6 @@ type Profile = {
 
 // Fungsi helper untuk membuat header kolom yang bisa di-sort
 const SortableHeader = <TData, TValue>(
-    // --- PERBAIKAN 3: Terima seluruh konteks ---
     props: HeaderContext<TData, TValue>,
     title: string
   ) => {
@@ -68,7 +74,6 @@ export const columns: ColumnDef<Profile>[] = [
   },
   {
     accessorKey: "full_name",
-    // --- PERBAIKAN 3: Kirim seluruh konteks ke helper ---
     header: (props) => SortableHeader(props, "Nama Lengkap"),
   },
   {
@@ -77,7 +82,6 @@ export const columns: ColumnDef<Profile>[] = [
   },
   {
     accessorKey: "accepted_major",
-    // --- PERBAIKAN 3: Kirim seluruh konteks ke helper ---
     header: (props) => SortableHeader(props, "Program Keahlian"),
   },
   {
@@ -119,11 +123,18 @@ export function StudentDataTable({ data }: { data: Profile[] }) {
       sorting,
       columnFilters,
     },
+    // --- PERUBAHAN DI SINI ---
+    // Atur state awal untuk pagination.
+    initialState: {
+        pagination: {
+            pageSize: 10, // Tampilkan 10 baris per halaman secara default
+        },
+    },
+    // --- AKHIR PERUBAHAN ---
   });
 
   return (
     <div className="rounded-md border bg-card">
-      {/* --- PERBAIKAN 2: Hapus prop 'data' yang tidak dibutuhkan --- */}
       <DataTableToolbar table={table} />
       <div className="overflow-x-auto">
         <Table>
@@ -169,24 +180,53 @@ export function StudentDataTable({ data }: { data: Profile[] }) {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 p-4 border-t">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Sebelumnya
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Berikutnya
-        </Button>
+      {/* --- FOOTER PAGINATION YANG DIPERBARUI --- */}
+      <div className="flex items-center justify-between p-4 border-t">
+        <div className="text-sm text-muted-foreground">
+            Halaman {table.getState().pagination.pageIndex + 1} dari {table.getPageCount()}
+        </div>
+        <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-2">
+                <p className="text-sm font-medium">Baris per halaman</p>
+                <Select
+                    value={`${table.getState().pagination.pageSize}`}
+                    onValueChange={(value) => {
+                        table.setPageSize(Number(value))
+                    }}
+                >
+                    <SelectTrigger className="h-8 w-[70px]">
+                        <SelectValue placeholder={table.getState().pagination.pageSize} />
+                    </SelectTrigger>
+                    <SelectContent side="top">
+                        {[10, 20, 30, 40, 50].map((pageSize) => (
+                            <SelectItem key={pageSize} value={`${pageSize}`}>
+                                {pageSize}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                >
+                    Sebelumnya
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                >
+                    Berikutnya
+                </Button>
+            </div>
+        </div>
       </div>
+      {/* --- AKHIR FOOTER --- */}
     </div>
   );
 }
