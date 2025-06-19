@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
-import { CheckCircle, Edit, AlertTriangle } from "lucide-react";
+import { CheckCircle, Edit, AlertTriangle, Loader2 } from "lucide-react";
 
 // Definisikan tipe (TypeScript) untuk props 'profile' agar kode lebih aman dan mudah dibaca.
 type Profile = {
@@ -76,10 +76,7 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
     const router = useRouter();
     const supabase = createClient();
 
-    // State untuk mode edit, defaultnya false
     const [isEditing, setIsEditing] = useState(false);
-
-    // Inisialisasi state untuk setiap input form, diisi dengan data dari props 'profile'.
     const [fullName, setFullName] = useState(profile.full_name || '');
     const [schoolOrigin, setSchoolOrigin] = useState(profile.school_origin || '');
     const [entryPath, setEntryPath] = useState(profile.entry_path || '');
@@ -88,53 +85,53 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
     const [rejectionReason, setRejectionReason] = useState(profile.rejection_reason || '');
     
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    // --- PERUBAHAN: Gunakan satu state untuk notifikasi ---
+    const [notification, setNotification] = useState<{type: 'error' | 'success', message: string} | null>(null);
 
-    // Fungsi ini akan dijalankan saat tombol 'Simpan' ditekan.
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        setError(null);
+        setNotification(null);
 
-        // Validasi sederhana
         if (!entryPath || !acceptedMajor || !isReconfirm || !schoolOrigin) {
-          setError("Harap isi semua kolom yang wajib diisi (Asal Sekolah, Jalur Masuk, Program Keahlian, dan Konfirmasi).");
+          setNotification({type: 'error', message: "Harap isi semua kolom yang wajib diisi (Asal Sekolah, Jalur Masuk, Program Keahlian, dan Konfirmasi)."});
           setIsLoading(false);
           return;
         }
 
         const dataToUpdate = {
-            id: profile.id, // Kunci utama untuk update
+            id: profile.id,
             full_name: fullName,
             school_origin: schoolOrigin,
             entry_path: entryPath,
             accepted_major: acceptedMajor,
             is_reconfirm: isReconfirm === 'true',
             rejection_reason: isReconfirm === 'false' ? rejectionReason : null,
-            status: 'selesai', // Ubah status menjadi 'selesai'
-            updated_at: new Date().toISOString(), // Tambahkan timestamp
+            status: 'selesai',
+            updated_at: new Date().toISOString(),
         };
 
         const { error } = await supabase.from('profiles').update(dataToUpdate).eq('id', profile.id);
 
         if (error) {
             console.error("Error updating profile:", error);
-            setError(`Gagal menyimpan data: ${error.message}`);
+            setNotification({type: 'error', message: `Gagal menyimpan data: ${error.message}`});
         } else {
-            setIsEditing(false); // Keluar dari mode edit setelah berhasil menyimpan
-            router.refresh(); // Refresh halaman untuk mengambil data terbaru dari server
+            setNotification({type: 'success', message: 'Data berhasil disimpan!'});
+            // Beri jeda agar notifikasi terlihat sebelum refresh
+            setTimeout(() => {
+                setIsEditing(false);
+                router.refresh();
+            }, 1500);
         }
 
         setIsLoading(false);
     };
 
-    // Logika Render Utama
-    // Jika status sudah 'selesai' dan TIDAK dalam mode edit, tampilkan ringkasan.
     if (profile.status === 'selesai' && !isEditing) {
       return <SubmittedDataSummary profile={profile} onEdit={() => setIsEditing(true)} />;
     }
     
-    // Jika belum selesai ATAU dalam mode edit, tampilkan formulir.
     return (
         <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -144,19 +141,19 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="fullName">Nama Lengkap</Label>
-                    <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                    <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} disabled={isLoading} />
                 </div>
             </div>
 
             <div className="space-y-2">
                 <Label htmlFor="schoolOrigin">Asal Sekolah</Label>
-                <Input id="schoolOrigin" placeholder="Contoh: SMPN 1 CIGUGUR" value={schoolOrigin} onChange={(e) => setSchoolOrigin(e.target.value)} required/>
+                <Input id="schoolOrigin" placeholder="Contoh: SMPN 1 CIGUGUR" value={schoolOrigin} onChange={(e) => setSchoolOrigin(e.target.value)} required disabled={isLoading}/>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="entryPath">Jalur Masuk</Label>
-                     <Select onValueChange={setEntryPath} value={entryPath} required>
+                     <Select name="entryPath" onValueChange={setEntryPath} value={entryPath} required disabled={isLoading}>
                         <SelectTrigger>
                             <SelectValue placeholder="Pilih jalur masuk" />
                         </SelectTrigger>
@@ -172,7 +169,7 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
 
                 <div className="space-y-2">
                     <Label htmlFor="acceptedMajor">Diterima di Program Keahlian</Label>
-                    <Select onValueChange={setAcceptedMajor} value={acceptedMajor} required>
+                    <Select name="acceptedMajor" onValueChange={setAcceptedMajor} value={acceptedMajor} required disabled={isLoading}>
                         <SelectTrigger>
                             <SelectValue placeholder="Pilih program keahlian" />
                         </SelectTrigger>
@@ -190,7 +187,7 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
 
             <div className="space-y-3">
                 <Label>Konfirmasi kesiapan melanjutkan / daftar ulang</Label>
-                <RadioGroup value={isReconfirm} onValueChange={setIsReconfirm} className="flex items-center gap-6" required>
+                <RadioGroup value={isReconfirm} onValueChange={setIsReconfirm} className="flex items-center gap-6" required disabled={isLoading}>
                     <div className="flex items-center space-x-2">
                         <RadioGroupItem value="true" id="reconfirm-yes" />
                         <Label htmlFor="reconfirm-yes">Ya, saya akan melanjutkan</Label>
@@ -211,25 +208,26 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
                         value={rejectionReason}
                         onChange={(e) => setRejectionReason(e.target.value)}
                         required={isReconfirm === 'false'}
+                        disabled={isLoading}
                     />
                 </div>
             )}
             
-            {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md flex items-center gap-3 text-sm">
-                <AlertTriangle className="h-5 w-5"/>
-                <span>{error}</span>
+            {notification && (
+              <div className={`p-3 rounded-md flex items-center gap-3 text-sm ${notification.type === 'error' ? 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300'}`}>
+                {notification.type === 'error' ? <AlertTriangle className="h-5 w-5"/> : <CheckCircle className="h-5 w-5"/>}
+                <span>{notification.message}</span>
               </div>
             )}
 
             <div className="flex justify-end gap-4">
-              {/* Tampilkan tombol "Batal" hanya saat dalam mode edit */}
               {isEditing && (
-                <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsEditing(false)} disabled={isLoading}>
                   Batal
                 </Button>
               )}
               <Button type="submit" className="min-w-[120px]" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {isLoading ? 'Menyimpan...' : 'Simpan Data'}
               </Button>
             </div>

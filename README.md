@@ -1,105 +1,93 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+Aplikasi SPMB SMKN 9 Garut
+Aplikasi web untuk Sistem Penerimaan Murid Baru (SPMB) dan Pendaftaran Ulang Siswa di SMKN 9 Garut. Dibangun menggunakan Next.js, Supabase, dan Tailwind CSS.
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+Fitur Utama
+Aplikasi ini memiliki dua peran utama: Siswa dan Admin, dengan fungsionalitas yang berbeda untuk masing-masing peran.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+Panel Siswa
+Login Aman: Siswa login menggunakan Nomor Pendaftaran dan password yang telah ditentukan oleh admin.
 
-## Features
+Formulir Pendaftaran Ulang: Setelah login, siswa dapat mengisi dan memperbarui formulir pendaftaran ulang yang berisi data pribadi, asal sekolah, pilihan jurusan, dan konfirmasi.
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Middleware
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+Ringkasan Data: Setelah data disimpan, siswa akan melihat ringkasan dari data yang telah mereka kirimkan.
 
-## Demo
+Mode Edit: Siswa dapat mengubah kembali data mereka selama periode pendaftaran ulang masih dibuka.
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+Panel Admin
+Dashboard Statistik: Menampilkan ringkasan data pendaftar dalam bentuk kartu (Total Pendaftar, Sudah Daftar Ulang, Belum Daftar Ulang, Persentase Selesai).
 
-## Deploy to Vercel
+Tabel Data Lengkap: Menampilkan rekapan semua data siswa dalam bentuk tabel yang interaktif.
 
-Vercel deployment will guide you through creating a Supabase account and project.
+Fitur Tabel Lanjutan:
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+Pencarian: Mencari siswa berdasarkan nama.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+Filter: Memfilter data siswa berdasarkan Program Keahlian dan Status Formulir.
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+Ekspor Data: Mengunduh data yang ditampilkan di tabel ke dalam format Excel (.xlsx) atau PDF (.pdf).
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+Manajemen Pengguna:
 
-## Clone and run locally
+Tambah Pengguna Manual: Admin dapat menambahkan akun siswa satu per satu melalui formulir.
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+Impor Massal: Admin dapat membuat ratusan akun siswa sekaligus dengan mengunggah file CSV.
 
-2. Create a Next.js app using the Supabase Starter template npx command
+Template CSV: Disediakan tombol untuk mengunduh template CSV agar format data selalu benar.
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+Teknologi yang Digunakan
+Framework: Next.js (App Router)
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+Backend & Database: Supabase (Authentication, PostgreSQL, Storage)
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+Styling: Tailwind CSS
 
-3. Use `cd` to change into the app's directory
+Komponen UI: shadcn/ui
 
-   ```bash
-   cd with-supabase-app
-   ```
+Hosting: Vercel
 
-4. Rename `.env.example` to `.env.local` and update the following:
+Menjalankan Proyek Secara Lokal
+Ikuti langkah-langkah berikut untuk menjalankan proyek ini di komputer Anda.
 
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
-   ```
+Clone Repositori
+Gunakan git clone untuk mengunduh repositori ini ke mesin lokal Anda.
 
-   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+Buat Proyek Supabase
+Anda memerlukan proyek Supabase. Buat proyek baru melalui Supabase Dashboard.
 
-5. You can now run the Next.js local development server:
+Konfigurasi Environment Variables
 
-   ```bash
-   npm run dev
-   ```
+Salin file .env.example menjadi .env.local.
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+Isi variabel berikut dengan kunci dari proyek Supabase Anda (dapat ditemukan di Project Settings -> API):
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+NEXT_PUBLIC_SUPABASE_URL
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-## Feedback and issues
+Tambahkan juga SUPABASE_SERVICE_ROLE_KEY (dapat ditemukan di tempat yang sama, di bawah "Project API keys") untuk fungsionalitas admin.
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+Instal Dependencies
+Buka terminal di direktori proyek dan jalankan:
 
-## More Supabase examples
+npm install
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+Setup Database
+
+Buka SQL Editor di dashboard Supabase Anda.
+
+Jalankan skrip SQL yang ada di dalam proyek untuk membuat tabel profiles dan mengatur keamanannya.
+
+Jalankan Server Development
+
+npm run dev
+
+Aplikasi sekarang seharusnya berjalan di http://localhost:3000.
+
+Deploy ke Vercel
+Pastikan kode Anda sudah di-push ke repositori GitHub.
+
+Impor proyek Anda di Vercel.
+
+Konfigurasikan Environment Variables di pengaturan proyek Vercel. Pastikan untuk menambahkan NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, dan SUPABASE_SERVICE_ROLE_KEY.
+
+Klik Deploy.
