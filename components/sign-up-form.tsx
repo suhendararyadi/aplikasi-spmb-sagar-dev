@@ -1,115 +1,81 @@
-// PERHATIAN: Perbarui file `components/sign-up-form.tsx` Anda dengan kode ini.
-// Tujuannya adalah untuk membuat user uji coba melalui UI.
+// PERHATIAN: Perbarui file ini. Sekarang form ini menggunakan Server Action.
 
-"use client";
+'use client';
 
+// Gunakan hook dari 'react-dom' untuk stabilitas
+import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect, useRef } from 'react';
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-//import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { createInitialUser } from '@/app/auth/sign-up/actions'; // Impor action baru
+import { Loader2, AlertCircle } from 'lucide-react';
+
+const initialState = { error: null, successMessage: null };
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      {pending ? "Mendaftarkan..." : "Buat Akun Admin"}
+    </Button>
+  );
+}
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  // State baru untuk menampung data yang akan menjadi metadata
-  const [fullName, setFullName] = useState("");
-  const [registrationNumber, setRegistrationNumber] = useState("");
-
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const [state, formAction] = useFormState(createInitialUser, initialState);
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const supabase = createClient();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Modifikasi di sini: tambahkan 'data' ke dalam 'options'
-      // untuk menyimpan metadata saat registrasi.
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            registration_number: registrationNumber,
-          },
-          // Arahkan email konfirmasi ke halaman yang benar
-          emailRedirectTo: `${window.location.origin}/auth/confirm`,
-        },
-      });
-      if (error) throw error;
-      // Alih-alih redirect, cukup tampilkan pesan sukses
-      alert("User berhasil dibuat! Cek email untuk konfirmasi, lalu nonaktifkan kembali fitur sign-up di Supabase.");
+  useEffect(() => {
+    if (state.successMessage) {
+      alert(state.successMessage + " Anda akan diarahkan ke halaman login.");
       router.push("/auth/login");
-
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [state, router]);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Buat User Uji Coba</CardTitle>
-          <CardDescription>Gunakan form ini untuk membuat user, lalu nonaktifkan kembali.</CardDescription>
+          <CardTitle className="text-2xl">Buat Akun Admin Pertama</CardTitle>
+          <CardDescription>Gunakan form ini untuk mendaftarkan akun admin awal.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignUp}>
+          <form ref={formRef} action={formAction}>
             <div className="flex flex-col gap-4">
-              {/* Tambahkan input untuk Full Name dan Registration Number */}
               <div className="grid gap-2">
-                <Label htmlFor="fullName">Nama Lengkap</Label>
-                <Input
-                  id="fullName" type="text" placeholder="Nama Siswa Uji Coba" required
-                  value={fullName} onChange={(e) => setFullName(e.target.value)}
-                />
+                <Label htmlFor="fullName">Nama Lengkap Admin</Label>
+                <Input id="fullName" name="fullName" placeholder="Admin Sekolah" required />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="registrationNumber">Nomor Peserta</Label>
-                <Input
-                  id="registrationNumber" type="text" placeholder="Contoh: 199208242020121012" required
-                  value={registrationNumber} onChange={(e) => setRegistrationNumber(e.target.value)}
-                />
+                <Label htmlFor="registrationNumber">Nomor Registrasi (cth: admin01)</Label>
+                <Input id="registrationNumber" name="registrationNumber" placeholder="admin01" required />
               </div>
-               <div className="grid gap-2">
-                <Label htmlFor="email">Email (Nomor Peserta + Domain)</Label>
-                <Input
-                  id="email" type="email" placeholder="contoh@sekolah.id" required
-                  value={email} onChange={(e) => setEmail(e.target.value)}
-                />
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" name="email" type="email" placeholder="admin@sekolah.id" required />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password" type="password" required
-                  value={password} onChange={(e) => setPassword(e.target.value)}
-                />
+                <Input id="password" name="password" type="password" required />
               </div>
-
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Membuat Akun..." : "Buat Akun Uji Coba"}
-              </Button>
+              
+              {state.error && (
+                <div className="p-3 bg-red-50 text-red-700 rounded-md flex items-center gap-2">
+                  <AlertCircle size={16}/>
+                  <p className="text-sm">{state.error.message}</p>
+                </div>
+              )}
+              
+              <SubmitButton />
             </div>
           </form>
         </CardContent>
