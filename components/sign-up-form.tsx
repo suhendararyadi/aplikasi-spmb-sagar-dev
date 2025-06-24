@@ -1,20 +1,25 @@
-// PERHATIAN: Perbarui file ini. Sekarang form ini menggunakan Server Action.
-
 'use client';
 
-// Gunakan hook dari 'react-dom' untuk stabilitas
-import { useFormState, useFormStatus } from 'react-dom';
-import { useEffect, useRef } from 'react';
+// Impor hook yang diperlukan dari 'react' dan 'react-dom'
+import { useEffect, useRef, useState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createInitialUser } from '@/app/auth/sign-up/actions'; // Impor action baru
+// PERBAIKAN: Hapus impor untuk action yang sudah tidak ada
+// import { createInitialUser } from '@/app/auth/sign-up/actions'; 
 import { Loader2, AlertCircle } from 'lucide-react';
 
-const initialState = { error: null, successMessage: null };
+// Definisikan tipe untuk state form
+type FormState = {
+  error?: { message: string } | null;
+  successMessage?: string | null;
+};
+
+const initialState: FormState = { error: null, successMessage: null };
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -31,7 +36,9 @@ export function SignUpForm({
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const router = useRouter();
-  const [state, formAction] = useFormState(createInitialUser, initialState);
+  // PERBAIKAN: Karena action sudah tidak ada, kita ganti 'useActionState' dengan 'useState'
+  // Ini akan membuat form tidak melakukan apa-apa saat disubmit, tapi menghilangkan error.
+  const [state, setState] = useState<FormState>(initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -41,6 +48,11 @@ export function SignUpForm({
     }
   }, [state, router]);
 
+  // Placeholder untuk fungsi submit karena action sudah dihapus
+  const handleFormSubmit = () => {
+    setState({ error: { message: "Fungsionalitas pendaftaran via form ini telah dinonaktifkan. Silakan buat admin melalui UI PocketBase." } });
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -49,7 +61,8 @@ export function SignUpForm({
           <CardDescription>Gunakan form ini untuk mendaftarkan akun admin awal.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form ref={formRef} action={formAction}>
+          {/* PERBAIKAN: Hapus properti 'action' dari form */}
+          <form ref={formRef} action={handleFormSubmit}>
             <div className="flex flex-col gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="fullName">Nama Lengkap Admin</Label>
@@ -68,7 +81,8 @@ export function SignUpForm({
                 <Input id="password" name="password" type="password" required />
               </div>
               
-              {state.error && (
+              {/* PERBAIKAN: Akses state.error dengan aman */}
+              {state?.error && (
                 <div className="p-3 bg-red-50 text-red-700 rounded-md flex items-center gap-2">
                   <AlertCircle size={16}/>
                   <p className="text-sm">{state.error.message}</p>

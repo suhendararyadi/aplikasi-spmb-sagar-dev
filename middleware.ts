@@ -2,64 +2,65 @@ import { type NextRequest, NextResponse } from "next/server";
 import PocketBase from 'pocketbase';
 
 export async function middleware(request: NextRequest) {
-  // Buat instance PocketBase baru untuk setiap request
+  console.log(`\n--- [MIDDLEWARE] Request untuk: ${request.nextUrl.pathname} ---`);
+
+  const response = NextResponse.next();
   const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL!);
 
-  // Muat sesi dari cookie yang dikirim oleh browser
   const cookie = request.cookies.get("pb_auth");
+  console.log(`DEBUG: Cookie 'pb_auth' dari browser: ${cookie ? 'Ditemukan' : 'Tidak Ditemukan'}`);
+  
   if (cookie) {
-    pb.authStore.loadFromCookie(cookie.value);
+    // PERBAIKAN: Rekonstruksi string cookie agar sesuai dengan yang diharapkan oleh `loadFromCookie`.
+    // Format yang benar adalah "pb_auth=TOKEN_VALUE".
+    pb.authStore.loadFromCookie(`${cookie.name}=${cookie.value}`);
   }
+
+  // DEBUG: Cek status authStore SEBELUM refresh
+  console.log(`DEBUG: Status Awal - isValid: ${pb.authStore.isValid}, user role: ${pb.authStore.model?.role}`);
 
   try {
-    // Verifikasi dan refresh token jika ada dan valid
     if (pb.authStore.isValid) {
+      console.log("DEBUG: Mencoba refresh token...");
       await pb.collection('users').authRefresh();
+      console.log("DEBUG: Refresh token berhasil.");
     }
-  } catch {
-    // Jika refresh gagal (token tidak valid), bersihkan sesi
+  } catch (err) {
+    console.error("DEBUG: Refresh token GAGAL, membersihkan sesi.", err);
     pb.authStore.clear();
   }
-
-  // Periksa status login dan peran pengguna
+  
   const isLoggedIn = pb.authStore.isValid;
   const userRole = pb.authStore.model?.role;
   const { pathname } = request.nextUrl;
+  console.log(`DEBUG: Status Akhir - isLoggedIn: ${isLoggedIn}, user role: ${userRole}`);
+  console.log(`DEBUG: Tujuan Pathname: ${pathname}`);
 
-  // Definisikan halaman-halaman otentikasi dan publik
   const isAuthPage = pathname.startsWith('/auth');
   const isPublicPage = pathname === '/';
-  
-  // --- LOGIKA PENGALIHAN (REDIRECT) ---
 
-  // 1. Jika user SUDAH LOGIN dan mencoba akses halaman login/register -> Arahkan ke dashboard
   if (isLoggedIn && isAuthPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = userRole === 'admin' ? '/dashboard/admin' : '/dashboard/siswa';
-    const response = NextResponse.redirect(url);
-    // Lampirkan cookie yang diperbarui ke header response redirect
-    response.headers.set('set-cookie', pb.authStore.exportToCookie());
-    return response;
+    const dashboardUrl = userRole === 'admin' ? '/dashboard/admin' : '/dashboard/siswa';
+    console.log(`DEBUG: REDIRECT -> User sudah login, mengarahkan ke ${dashboardUrl}`);
+    const url = new URL(dashboardUrl, request.url);
+    const redirectResponse = NextResponse.redirect(url);
+    redirectResponse.headers.set('set-cookie', pb.authStore.exportToCookie());
+    return redirectResponse;
   }
 
-  // 2. Jika user BELUM LOGIN dan mencoba akses halaman yang dilindungi -> Arahkan ke login
   if (!isLoggedIn && !isAuthPage && !isPublicPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/auth/login';
-    return NextResponse.redirect(url);
+    console.log(`DEBUG: REDIRECT -> User belum login, mengarahkan ke /auth/login`);
+    const loginUrl = new URL('/auth/login', request.url);
+    return NextResponse.redirect(loginUrl);
   }
   
-  // 3. Untuk semua kasus lain (lanjutkan navigasi)
-  // Buat response untuk melanjutkan
-  const response = NextResponse.next();
-  // Selalu lampirkan cookie yang diperbarui ke response untuk menjaga sesi tetap aktif
+  console.log("DEBUG: LANJUTKAN -> Tidak ada redirect, melanjutkan ke halaman tujuan.");
   response.headers.set('set-cookie', pb.authStore.exportToCookie());
   return response;
 }
 
 export const config = {
   matcher: [
-    // Jalankan middleware untuk semua path kecuali file statis dan API
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };

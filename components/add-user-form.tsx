@@ -1,8 +1,8 @@
 'use client';
 
-// Menggunakan hook dari 'react-dom' untuk stabilitas
-import { useFormState, useFormStatus } from 'react-dom';
-import { useEffect, useRef } from 'react';
+// PERBAIKAN: Impor hook dari 'react' dan 'react-dom' sesuai standar React 19
+import { useActionState, useEffect, useRef } from 'react';
+import { useFormStatus } from 'react-dom';
 
 import { addUser } from '@/app/dashboard/admin/user-management/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,14 +12,12 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
-// State awal untuk form
 const initialState = {
   successMessage: null,
   error: null,
   data: null,
 };
 
-// Komponen tombol submit dengan status loading
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
@@ -30,9 +28,9 @@ function SubmitButton() {
   );
 }
 
-// Pastikan fungsi ini diekspor dengan benar
 export function AddUserForm() {
-  const [state, formAction] = useFormState(addUser, initialState);
+  // PERBAIKAN: Gunakan 'useActionState' yang baru, bukan 'useFormState'
+  const [state, formAction] = useActionState(addUser, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {

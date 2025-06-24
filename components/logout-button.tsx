@@ -1,30 +1,34 @@
 "use client";
 
-import { createClient } from "@/lib/pocketbase/client"; // PERBAIKAN: Impor dari helper PocketBase
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
+import { useFormStatus } from "react-dom";
+// PERBAIKAN: Impor Server Action dari file terpisah
+import { logoutAction } from "@/app/auth/actions";
+
+// Komponen kecil untuk menampilkan teks dan ikon di dalam tombol
+function ButtonContent() {
+    // Hook ini memberikan status 'pending' saat form sedang disubmit
+    const { pending } = useFormStatus();
+
+    return (
+        <>
+            <LogOut className="mr-0 sm:mr-2 h-4 w-4"/>
+            <span className="hidden sm:inline">
+                {pending ? "Keluar..." : "Keluar"}
+            </span>
+        </>
+    );
+}
+
 
 export function LogoutButton() {
-  const router = useRouter();
-
-  const logout = async () => {
-    // Gunakan client dari PocketBase
-    const pb = createClient();
-    
-    // PERBAIKAN: Logika logout untuk PocketBase adalah dengan membersihkan authStore
-    pb.authStore.clear();
-
-    // Arahkan ke halaman utama setelah keluar
-    router.push("/");
-    // Refresh halaman untuk memastikan server mengenali perubahan sesi
-    router.refresh();
-  };
-
   return (
-    <Button variant="ghost" size="sm" onClick={logout}>
-        <LogOut className="mr-0 sm:mr-2 h-4 w-4"/>
-        <span className="hidden sm:inline">Keluar</span>
-    </Button>
+    // Tombol logout sekarang ada di dalam form yang memanggil Server Action
+    <form action={logoutAction}>
+      <Button variant="ghost" size="sm" type="submit">
+          <ButtonContent />
+      </Button>
+    </form>
   );
 }

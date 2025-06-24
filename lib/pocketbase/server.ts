@@ -17,7 +17,9 @@ export async function createServerClient() {
 
     // Muat token dari cookie ke dalam instance PocketBase.
     if (authCookie) {
-        pb.authStore.loadFromCookie(authCookie.value);
+        // PERBAIKAN KUNCI: Rekonstruksi string cookie agar sesuai dengan yang diharapkan oleh `loadFromCookie`.
+        // Format yang benar adalah "pb_auth=TOKEN_VALUE".
+        pb.authStore.loadFromCookie(`${authCookie.name}=${authCookie.value}`);
     }
     
     // Secara opsional, coba refresh token jika sudah mau expired.
