@@ -1,9 +1,6 @@
-// PERHATIAN: Perbarui file `components/logout-button.tsx`.
-// Perubahan: Teks diubah, ikon ditambahkan, dan redirect ke halaman utama.
-
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/pocketbase/client"; // PERBAIKAN: Impor dari helper PocketBase
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
@@ -12,9 +9,16 @@ export function LogoutButton() {
   const router = useRouter();
 
   const logout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/"); // Arahkan ke halaman utama setelah keluar
+    // Gunakan client dari PocketBase
+    const pb = createClient();
+    
+    // PERBAIKAN: Logika logout untuk PocketBase adalah dengan membersihkan authStore
+    pb.authStore.clear();
+
+    // Arahkan ke halaman utama setelah keluar
+    router.push("/");
+    // Refresh halaman untuk memastikan server mengenali perubahan sesi
+    router.refresh();
   };
 
   return (

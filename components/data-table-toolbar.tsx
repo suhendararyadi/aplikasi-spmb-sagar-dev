@@ -1,6 +1,3 @@
-// PERHATIAN: Perbarui file ini di `components/data-table-toolbar.tsx`.
-// Menambahkan kembali fitur ekspor PDF dan Excel.
-
 "use client";
 
 import { Table } from "@tanstack/react-table";
@@ -24,10 +21,10 @@ interface DataTableToolbarProps<TData> {
   table: Table<TData>;
 }
 
-// Definisikan tipe yang lebih spesifik untuk baris data profil
+// Tipe untuk baris data profil dari PocketBase
 type ProfileRow = {
   registration_number: string | null;
-  full_name: string | null;
+  name: string | null; // PERUBAHAN: dari full_name menjadi name
   school_origin: string | null;
   entry_path: string | null;
   accepted_major: string | null;
@@ -48,7 +45,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         const original = row.original as ProfileRow;
         return {
             "No. Pendaftaran": original.registration_number,
-            "Nama Lengkap": original.full_name,
+            "Nama Lengkap": original.name, // PERUBAHAN: Gunakan 'name'
             "Asal Sekolah": original.school_origin,
             "Jalur Masuk": original.entry_path,
             "Program Keahlian": original.accepted_major,
@@ -72,7 +69,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         const original = row.original as ProfileRow;
         return [
             original.registration_number,
-            original.full_name,
+            original.name, // PERUBAHAN: Gunakan 'name'
             original.accepted_major,
             original.status === 'selesai' ? 'Selesai' : 'Belum',
             original.is_reconfirm === null ? '-' : (original.is_reconfirm ? 'Ya' : 'Tidak'),
@@ -94,14 +91,14 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
       <div className="flex flex-1 items-center space-x-2">
         <Input
           placeholder="Cari berdasarkan nama siswa..."
-          value={(table.getColumn("full_name")?.getFilterValue() as string) ?? ""}
+          // PERUBAHAN: Filter berdasarkan kolom 'name'
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("full_name")?.setFilterValue(event.target.value)
+            table.getColumn("name")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
         
-        {/* Filter Status Formulir */}
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="ml-2">
@@ -134,7 +131,6 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         </DropdownMenu>
       </div>
 
-      {/* Tombol Ekspor */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline">

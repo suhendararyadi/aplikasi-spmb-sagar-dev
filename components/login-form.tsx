@@ -1,10 +1,7 @@
-// PERHATIAN: Perbarui file `components/login-form.tsx` Anda dengan kode ini.
-// Perubahan: Menambahkan logika pengecekan peran setelah login berhasil.
-
 "use client";
 
+import { createClient } from "@/lib/pocketbase/client";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,54 +29,28 @@ export function LoginForm({
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const supabase = createClient();
+    const pb = createClient();
     setIsLoading(true);
     setMessage(null);
 
     try {
-      const email = `${participantNumber}@smknegeri9garut.sch.id`;
+      const identity = participantNumber;
+      const authData = await pb.collection('users').authWithPassword(identity, password);
 
-      // Langkah 1: Coba login
-      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      setMessage({ type: 'success', text: 'Login berhasil! Mengarahkan ke dashboard...' });
 
-      if (loginError) throw loginError;
-
-      // Jika login berhasil, tampilkan pesan sukses
-      setMessage({ type: 'success', text: 'Login berhasil! Memeriksa peran Anda...' });
-
-      // Langkah 2: Periksa peran (role) pengguna yang baru saja login
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', loginData.user.id)
-        .single();
+      const targetUrl = authData.record.role === 'admin' ? '/dashboard/admin' : '/dashboard/siswa';
       
-      if (profileError) {
-        // Jika gagal memeriksa peran, arahkan ke dashboard siswa sebagai default
-        console.error("Gagal memeriksa peran:", profileError);
-        router.push("/dashboard/siswa");
-        return;
-      }
+      // PERBAIKAN: Langsung arahkan pengguna setelah login berhasil.
+      // Ini akan membuat pengalaman pengguna lebih cepat dan mengatasi masalah 'stuck'.
+      router.refresh(); 
+      router.push(targetUrl);
 
-      // Langkah 3: Arahkan berdasarkan peran
-      const targetUrl = profile?.role === 'admin' ? '/dashboard/admin' : '/dashboard/siswa';
-      
-      // Beri jeda agar notifikasi terlihat
-      setTimeout(() => {
-          router.push(targetUrl);
-      }, 1500);
+      // Kita tidak perlu memanggil setIsLoading(false) di sini karena
+      // komponen akan segera di-unmount saat halaman berpindah.
 
     } catch (error: unknown) {
-      if (error instanceof Error && error.message.includes("Invalid login credentials")) {
-        setMessage({ type: 'error', text: "Nomor Peserta atau Password salah. Silakan coba lagi." });
-      } else if (error instanceof Error) {
-        setMessage({ type: 'error', text: error.message });
-      } else {
-        setMessage({ type: 'error', text: "Terjadi kesalahan. Silakan coba beberapa saat lagi." });
-      }
+      setMessage({ type: 'error', text: "Nomor Peserta atau Password salah. Silakan coba lagi." });
       setIsLoading(false);
     }
   };

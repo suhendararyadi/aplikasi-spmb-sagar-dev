@@ -1,6 +1,3 @@
-// PERHATIAN: Perbarui file ini di `components/student-data-table.tsx`.
-// Perubahan: Mengatur default pagination menjadi 10 dan menambahkan kontrol di footer.
-
 "use client";
 
 import * as React from "react";
@@ -29,7 +26,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTableToolbar } from "./data-table-toolbar";
 import { ArrowUpDown } from "lucide-react";
-// Impor komponen Select untuk kontrol pagination
 import {
   Select,
   SelectContent,
@@ -38,10 +34,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Definisikan tipe untuk data profil
+// Definisikan tipe untuk data profil dari PocketBase
 type Profile = {
   id: string;
-  full_name: string | null;
+  name: string | null; // PERUBAHAN: dari full_name menjadi name
   registration_number: string | null;
   school_origin: string | null;
   entry_path: string | null;
@@ -73,7 +69,7 @@ export const columns: ColumnDef<Profile>[] = [
     header: "No. Pendaftaran",
   },
   {
-    accessorKey: "full_name",
+    accessorKey: "name", // PERUBAHAN: dari full_name menjadi name
     header: (props) => SortableHeader(props, "Nama Lengkap"),
   },
   {
@@ -123,14 +119,11 @@ export function StudentDataTable({ data }: { data: Profile[] }) {
       sorting,
       columnFilters,
     },
-    // --- PERUBAHAN DI SINI ---
-    // Atur state awal untuk pagination.
     initialState: {
         pagination: {
-            pageSize: 10, // Tampilkan 10 baris per halaman secara default
+            pageSize: 10,
         },
     },
-    // --- AKHIR PERUBAHAN ---
   });
 
   return (
@@ -180,7 +173,6 @@ export function StudentDataTable({ data }: { data: Profile[] }) {
           </TableBody>
         </Table>
       </div>
-      {/* --- FOOTER PAGINATION YANG DIPERBARUI --- */}
       <div className="flex items-center justify-between p-4 border-t">
         <div className="text-sm text-muted-foreground">
             Halaman {table.getState().pagination.pageIndex + 1} dari {table.getPageCount()}
@@ -226,7 +218,6 @@ export function StudentDataTable({ data }: { data: Profile[] }) {
             </div>
         </div>
       </div>
-      {/* --- AKHIR FOOTER --- */}
     </div>
   );
 }
