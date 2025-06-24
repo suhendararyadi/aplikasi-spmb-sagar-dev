@@ -25,7 +25,8 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  // Kita masih butuh router untuk pre-fetching, tapi tidak untuk redirect
+  const router = useRouter(); 
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,17 +38,16 @@ export function LoginForm({
       const identity = participantNumber;
       const authData = await pb.collection('users').authWithPassword(identity, password);
 
+      // Set cookie di browser setelah login berhasil.
+      document.cookie = pb.authStore.exportToCookie({ httpOnly: false });
+
       setMessage({ type: 'success', text: 'Login berhasil! Mengarahkan ke dashboard...' });
 
       const targetUrl = authData.record.role === 'admin' ? '/dashboard/admin' : '/dashboard/siswa';
       
-      // PERBAIKAN: Langsung arahkan pengguna setelah login berhasil.
-      // Ini akan membuat pengalaman pengguna lebih cepat dan mengatasi masalah 'stuck'.
-      router.refresh(); 
-      router.push(targetUrl);
-
-      // Kita tidak perlu memanggil setIsLoading(false) di sini karena
-      // komponen akan segera di-unmount saat halaman berpindah.
+      // PERBAIKAN FINAL: Gunakan window.location.href untuk memaksa full-page reload.
+      // Ini adalah cara paling andal untuk memastikan server membaca sesi cookie yang baru.
+      window.location.href = targetUrl;
 
     } catch (error: unknown) {
       setMessage({ type: 'error', text: "Nomor Peserta atau Password salah. Silakan coba lagi." });
