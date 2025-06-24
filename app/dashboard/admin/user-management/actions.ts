@@ -1,6 +1,6 @@
 'use server';
 
-import PocketBase, { ClientResponseError } from 'pocketbase';
+import { ClientResponseError } from 'pocketbase';
 import { revalidatePath } from 'next/cache';
 import { createServerClient } from '@/lib/pocketbase/server';
 

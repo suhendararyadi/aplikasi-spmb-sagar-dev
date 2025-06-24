@@ -12,22 +12,18 @@ export async function createServerClient() {
     const cookieStore = await cookies();
     const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL!);
 
-    // Ambil cookie otentikasi dari request yang masuk.
     const authCookie = cookieStore.get('pb_auth');
 
-    // Muat token dari cookie ke dalam instance PocketBase.
     if (authCookie) {
-        // PERBAIKAN KUNCI: Rekonstruksi string cookie agar sesuai dengan yang diharapkan oleh `loadFromCookie`.
-        // Format yang benar adalah "pb_auth=TOKEN_VALUE".
         pb.authStore.loadFromCookie(`${authCookie.name}=${authCookie.value}`);
     }
     
-    // Secara opsional, coba refresh token jika sudah mau expired.
     try {
         if(pb.authStore.isValid && pb.authStore.token) {
            await pb.collection('users').authRefresh();
         }
-    } catch (_) {
+    // PERBAIKAN: Hapus variabel '_' yang tidak digunakan dari blok catch.
+    } catch {
         // Jika refresh token gagal, bersihkan authStore.
         pb.authStore.clear();
     }

@@ -1,5 +1,5 @@
 import { createServerClient } from "@/lib/pocketbase/server";
-import { redirect } from "next/navigation";
+// import { redirect } from "next/navigation";
 import {
   Card,
   CardContent,

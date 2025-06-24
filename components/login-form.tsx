@@ -13,7 +13,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+// PERBAIKAN: Hapus impor useRouter karena tidak lagi digunakan.
+// import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 
@@ -25,8 +26,8 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  // Kita masih butuh router untuk pre-fetching, tapi tidak untuk redirect
-  const router = useRouter(); 
+  // PERBAIKAN: Hapus deklarasi router yang tidak digunakan.
+  // const router = useRouter(); 
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,18 +39,18 @@ export function LoginForm({
       const identity = participantNumber;
       const authData = await pb.collection('users').authWithPassword(identity, password);
 
-      // Set cookie di browser setelah login berhasil.
       document.cookie = pb.authStore.exportToCookie({ httpOnly: false });
 
       setMessage({ type: 'success', text: 'Login berhasil! Mengarahkan ke dashboard...' });
 
       const targetUrl = authData.record.role === 'admin' ? '/dashboard/admin' : '/dashboard/siswa';
       
-      // PERBAIKAN FINAL: Gunakan window.location.href untuk memaksa full-page reload.
-      // Ini adalah cara paling andal untuk memastikan server membaca sesi cookie yang baru.
       window.location.href = targetUrl;
 
     } catch (error: unknown) {
+      // PERBAIKAN: Gunakan variabel error untuk logging agar tidak ada peringatan.
+      // Ini juga sangat membantu untuk debugging di masa depan.
+      console.error("Login failed:", error);
       setMessage({ type: 'error', text: "Nomor Peserta atau Password salah. Silakan coba lagi." });
       setIsLoading(false);
     }
