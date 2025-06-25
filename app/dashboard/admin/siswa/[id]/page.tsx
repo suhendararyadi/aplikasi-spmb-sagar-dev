@@ -27,10 +27,11 @@ type Profile = {
     role?: 'admin' | 'siswa';
 };
 
-// PERBAIKAN: Definisikan tipe props sesuai dengan standar Next.js App Router.
+// PERBAIKAN: Definisikan tipe props sesuai dengan Next.js App Router yang baru
 interface PageProps {
-  params: { id: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
+    params: Promise<{
+        id: string;
+    }>;
 }
 
 // Fungsi untuk mengambil data siswa berdasarkan ID
@@ -62,9 +63,10 @@ function DataRow({ label, value, children }: { label: string; value?: string | n
     );
 }
 
-// PERBAIKAN: Gunakan tipe PageProps yang sudah didefinisikan.
+// PERBAIKAN: Await params sebelum menggunakannya
 export default async function StudentProfilePage({ params }: PageProps) {
-    const student = await getStudentData(params.id);
+    const { id } = await params;
+    const student = await getStudentData(id);
     
     const getFileUrl = (filename: string) => {
         // Gunakan instance pb baru agar tidak ada state yang tercampur
