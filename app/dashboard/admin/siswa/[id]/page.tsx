@@ -27,6 +27,13 @@ type Profile = {
     role?: 'admin' | 'siswa';
 };
 
+// PERBAIKAN: Definisikan tipe props untuk halaman dinamis secara eksplisit.
+interface PageProps {
+    params: {
+        id: string;
+    };
+}
+
 // Fungsi untuk mengambil data siswa berdasarkan ID
 async function getStudentData(id: string) {
     const pb = await createServerClient();
@@ -56,10 +63,9 @@ function DataRow({ label, value, children }: { label: string; value?: string | n
     );
 }
 
-export default async function StudentProfilePage({ params }: { params: { id: string } }) {
+// PERBAIKAN: Gunakan tipe PageProps yang sudah didefinisikan.
+export default async function StudentProfilePage({ params }: PageProps) {
     const student = await getStudentData(params.id);
-    
-    // PERBAIKAN: Hapus variabel 'pb_client' yang tidak digunakan.
     
     const getFileUrl = (filename: string) => {
         // Gunakan instance pb baru agar tidak ada state yang tercampur
