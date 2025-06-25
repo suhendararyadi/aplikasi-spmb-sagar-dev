@@ -1,4 +1,4 @@
-import { createServerClient } from "@/lib/pocketbase/server"; // PERBAIKAN: Path impor diubah
+import { createServerClient } from "@/lib/pocketbase/server";
 import { redirect } from "next/navigation";
 import { StudentReregistrationForm } from "@/components/student-reregistration-form";
 import {
@@ -8,6 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Printer } from "lucide-react";
 
 export default async function StudentDashboardPage() {
   const pb = await createServerClient();
@@ -26,12 +29,23 @@ export default async function StudentDashboardPage() {
   return (
     <div className="w-full max-w-4xl mx-auto">
       <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Formulir Pendaftaran Ulang</CardTitle>
-          <CardDescription>
-            Selamat datang, <strong>{userProfile.name || "Siswa"}</strong>. 
-            Silakan lengkapi atau periksa kembali data di bawah ini.
-          </CardDescription>
+        <CardHeader className="flex flex-row justify-between items-start">
+          <div>
+            <CardTitle className="text-2xl">Formulir Pendaftaran Ulang</CardTitle>
+            <CardDescription>
+              Selamat datang, <strong>{userProfile.name || "Siswa"}</strong>. 
+              Silakan lengkapi atau periksa kembali data di bawah ini.
+            </CardDescription>
+          </div>
+          {/* Tombol Cetak hanya muncul jika status 'selesai' */}
+          {userProfile.status === 'selesai' && (
+            <Button asChild>
+              <Link href="/dashboard/siswa/cetak">
+                <Printer className="mr-2 h-4 w-4" />
+                Cetak Kartu Bukti
+              </Link>
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           <StudentReregistrationForm profile={userProfile} />

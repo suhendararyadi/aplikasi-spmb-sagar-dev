@@ -66,3 +66,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Pastikan ini ada di akhir file app/globals.css */
+@media print {
+    .print\:hidden {
+        display: none;
+    }
+    .print\:bg-white {
+        background-color: #ffffff;
+    }
+    .print\:p-0 {
+        padding: 0;
+    }
+}
