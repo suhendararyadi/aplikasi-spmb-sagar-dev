@@ -13,7 +13,6 @@ import {
   ColumnFiltersState,
   HeaderContext
 } from "@tanstack/react-table";
-
 import {
   Table,
   TableBody,
@@ -25,7 +24,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DataTableToolbar } from "./data-table-toolbar";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Eye } from "lucide-react";
+import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -34,10 +41,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Definisikan tipe untuk data profil dari PocketBase
 type Profile = {
   id: string;
-  name: string | null; // PERUBAHAN: dari full_name menjadi name
+  name: string | null;
   registration_number: string | null;
   school_origin: string | null;
   entry_path: string | null;
@@ -46,7 +52,6 @@ type Profile = {
   is_reconfirm: boolean | null;
 };
 
-// Fungsi helper untuk membuat header kolom yang bisa di-sort
 const SortableHeader = <TData, TValue>(
     props: HeaderContext<TData, TValue>,
     title: string
@@ -62,14 +67,13 @@ const SortableHeader = <TData, TValue>(
     )
 }
 
-// Definisikan kolom-kolom untuk tabel
 export const columns: ColumnDef<Profile>[] = [
   {
     accessorKey: "registration_number",
     header: "No. Pendaftaran",
   },
   {
-    accessorKey: "name", // PERUBAHAN: dari full_name menjadi name
+    accessorKey: "name",
     header: (props) => SortableHeader(props, "Nama Lengkap"),
   },
   {
@@ -99,6 +103,33 @@ export const columns: ColumnDef<Profile>[] = [
         }
         return isReconfirm ? <span className="text-green-600 font-semibold">Ya</span> : <span className="text-red-600 font-semibold">Tidak</span>;
     }
+  },
+  // KOLOM AKSI BARU
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const student = row.original;
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Buka menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+              <Link href={`/dashboard/admin/siswa/${student.id}`}>
+                <Eye className="mr-2 h-4 w-4" />
+                Lihat Profil
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
   },
 ];
 
