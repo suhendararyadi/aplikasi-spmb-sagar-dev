@@ -39,6 +39,7 @@ const SubmittedDataSummary = ({ profile, onEdit }: { profile: Profile, onEdit: (
   
   const getFileUrl = () => {
     if (!profile.surat_pernyataan) return "#";
+    // Menggunakan helper PocketBase untuk membuat URL file yang valid
     return pb.getFileUrl(profile, profile.surat_pernyataan);
   }
 
@@ -66,6 +67,7 @@ const SubmittedDataSummary = ({ profile, onEdit }: { profile: Profile, onEdit: (
           {profile.is_reconfirm === false && (
             <div><Label className="text-muted-foreground">Alasan Tidak Melanjutkan</Label><p className="font-semibold">{profile.rejection_reason}</p></div>
           )}
+          {/* Menampilkan link download jika file ada */}
           {profile.surat_pernyataan && (
              <div><Label className="text-muted-foreground">Surat Pernyataan</Label><p><a href={getFileUrl()} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold flex items-center gap-2"><FileText size={16}/>Lihat Dokumen</a></p></div>
           )}
@@ -92,6 +94,7 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
     const [acceptedMajor, setAcceptedMajor] = useState(profile.accepted_major || '');
     const [isReconfirm, setIsReconfirm] = useState(profile.is_reconfirm?.toString() || '');
     const [rejectionReason, setRejectionReason] = useState(profile.rejection_reason || '');
+    // State baru untuk menampung file yang akan diupload
     const [pernyataanFile, setPernyataanFile] = useState<File | null>(null);
 
     const [isLoading, setIsLoading] = useState(false);
@@ -107,6 +110,7 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
         setIsLoading(true);
         setNotification(null);
 
+        // Validasi, pastikan file sudah diunggah jika belum ada sebelumnya
         if (!entryPath || !acceptedMajor || !isReconfirm || !schoolOrigin || (!pernyataanFile && !profile.surat_pernyataan) ) {
           setNotification({type: 'error', message: "Harap isi semua kolom, termasuk mengunggah Surat Pernyataan."});
           setIsLoading(false);
@@ -121,6 +125,7 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
         formData.append('is_reconfirm', isReconfirm);
         formData.append('rejection_reason', isReconfirm === 'false' ? rejectionReason : '');
         formData.append('status', 'selesai');
+        // Hanya tambahkan file ke form data jika ada file baru yang dipilih
         if (pernyataanFile) {
           formData.append('surat_pernyataan', pernyataanFile);
         }
@@ -129,6 +134,7 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
             const userId = pb.authStore.model?.id;
             if (!userId) throw new Error("Sesi tidak valid. Silakan login ulang.");
             
+            // Kirim form data ke PocketBase
             await pb.collection('users').update(userId, formData);
 
             setNotification({type: 'success', message: 'Data berhasil disimpan!'});
@@ -228,7 +234,8 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
                     />
                 </div>
             )}
-
+            
+            {/* Field Upload Baru */}
             <div className="space-y-3">
               <Label htmlFor="surat_pernyataan">Dokumen Surat Pernyataan</Label>
               <Input 
@@ -241,6 +248,7 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
               <p className="text-sm text-muted-foreground">
                 Unggah file PDF atau Gambar (JPG, PNG). Maksimal 5MB.
               </p>
+              {/* Menampilkan file yang sudah ada */}
               {profile.surat_pernyataan && !pernyataanFile && (
                 <div className="text-sm flex items-center gap-2 text-green-600">
                   <FileText size={16} />
