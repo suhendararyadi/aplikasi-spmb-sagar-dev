@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, FileText, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { UpdateStatusForm } from "@/components/update-status-form"; // Impor komponen form baru
 
 // Tipe untuk data profil lengkap dari PocketBase
 type Profile = {
@@ -25,35 +26,27 @@ type Profile = {
     created?: string | null;
     updated?: string | null;
     role?: 'admin' | 'siswa';
+    status_kelulusan?: string | null; // Tambahkan field baru
 };
 
-// PERBAIKAN: Definisikan tipe props sesuai dengan Next.js App Router yang baru
 interface PageProps {
-    params: Promise<{
-        id: string;
-    }>;
+    params: { id: string; };
 }
 
-// Fungsi untuk mengambil data siswa berdasarkan ID
 async function getStudentData(id: string) {
     const pb = await createServerClient();
-    
-    // Pastikan hanya admin yang bisa mengakses halaman ini
     if (!pb.authStore.isValid || pb.authStore.model?.role !== 'admin') {
         redirect('/auth/login');
     }
-
     try {
         const studentProfile: Profile = await pb.collection('users').getOne(id);
         return studentProfile;
     } catch (error) {
-        // Jika siswa dengan ID tersebut tidak ditemukan, tampilkan halaman 404
         console.error("Gagal mengambil profil siswa:", error);
         notFound();
     }
 }
 
-// Komponen helper untuk menampilkan baris data agar rapi
 function DataRow({ label, value, children }: { label: string; value?: string | null; children?: React.ReactNode }) {
     return (
         <div className="flex flex-col gap-1">
@@ -63,13 +56,10 @@ function DataRow({ label, value, children }: { label: string; value?: string | n
     );
 }
 
-// PERBAIKAN: Await params sebelum menggunakannya
 export default async function StudentProfilePage({ params }: PageProps) {
-    const { id } = await params;
-    const student = await getStudentData(id);
+    const student = await getStudentData(params.id);
     
     const getFileUrl = (filename: string) => {
-        // Gunakan instance pb baru agar tidak ada state yang tercampur
         return new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL!).getFileUrl(student, filename);
     }
 
@@ -91,7 +81,7 @@ export default async function StudentProfilePage({ params }: PageProps) {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
-                    {/* Bagian Data Diri */}
+                    {/* PERBAIKAN: Mengembalikan semua bagian data siswa */}
                     <section>
                         <h3 className="font-semibold text-lg border-b pb-2 mb-4">Data Diri</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -102,7 +92,6 @@ export default async function StudentProfilePage({ params }: PageProps) {
                         </div>
                     </section>
                     
-                    {/* Bagian Data Pendaftaran */}
                     <section>
                          <h3 className="font-semibold text-lg border-b pb-2 mb-4">Status Pendaftaran</h3>
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -124,7 +113,6 @@ export default async function StudentProfilePage({ params }: PageProps) {
                          </div>
                     </section>
 
-                    {/* Bagian Dokumen */}
                     <section>
                         <h3 className="font-semibold text-lg border-b pb-2 mb-4">Dokumen Terunggah</h3>
                         <DataRow label="Surat Pernyataan">
@@ -139,6 +127,15 @@ export default async function StudentProfilePage({ params }: PageProps) {
                                 <p className="text-muted-foreground italic">Siswa belum mengunggah dokumen.</p>
                             )}
                         </DataRow>
+                    </section>
+
+                    {/* PERBAIKAN: Memindahkan form manajemen ke bagian paling bawah */}
+                    <section>
+                        <h3 className="font-semibold text-lg border-b pb-2 mb-4">Manajemen Status Kelulusan</h3>
+                        <div className="p-4 bg-muted/50 rounded-lg">
+                           <p className="text-sm text-muted-foreground mb-4">Ubah status kelulusan untuk siswa ini. Perubahan akan langsung terlihat di halaman cek kelulusan publik.</p>
+                           <UpdateStatusForm studentId={student.id} currentStatus={student.status_kelulusan} />
+                        </div>
                     </section>
                 </CardContent>
             </Card>
