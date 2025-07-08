@@ -2,24 +2,39 @@
 
 import PocketBase, { ClientResponseError } from 'pocketbase';
 
-// Definisikan tipe untuk hasil yang akan dikembalikan
 export type KelulusanResult = {
     nama_lengkap: string;
     nomor_pendaftaran: string;
     status: 'LULUS' | 'TIDAK LULUS' | 'PROSES SELEKSI';
     jurusan_diterima: string;
-    // PERUBAHAN: Tambahkan field baru
     jalur_pendaftaran?: string;
 } | {
     error: string;
 };
 
+// Fungsi helper untuk mengambil jadwal pengumuman
+async function getAnnouncementTime(pb: PocketBase) {
+    try {
+        const settings = await pb.collection('pengaturan_app').getFirstListItem('');
+        return new Date(settings.waktu_pengumuman);
+    } catch {
+        // Jika gagal, anggap pengumuman selalu terbuka agar tidak memblokir total
+        return new Date(0); 
+    }
+}
+
 export async function checkKelulusan(nomorPendaftaran: string): Promise<KelulusanResult> {
+    const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL!);
+    
+    // PERBAIKAN: Cek waktu pengumuman terlebih dahulu
+    const announcementTime = await getAnnouncementTime(pb);
+    if (new Date() < announcementTime) {
+        return { error: 'Pengumuman belum dibuka. Silakan cek kembali sesuai jadwal.' };
+    }
+
     if (!nomorPendaftaran) {
         return { error: 'Nomor pendaftaran tidak boleh kosong.' };
     }
-
-    const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL!);
 
     try {
         const record = await pb.collection('status_kelulusan').getFirstListItem(
@@ -31,7 +46,6 @@ export async function checkKelulusan(nomorPendaftaran: string): Promise<Kelulusa
             nomor_pendaftaran: record.nomor_pendaftaran,
             status: record.status,
             jurusan_diterima: record.jurusan_diterima,
-            // PERUBAHAN: Kembalikan field baru
             jalur_pendaftaran: record.jalur_pendaftaran,
         };
     } catch (error) { 

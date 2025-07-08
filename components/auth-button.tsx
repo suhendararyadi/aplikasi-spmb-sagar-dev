@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { createServerClient } from "@/lib/pocketbase/server"; // PERBAIKAN: Path impor diubah
+import { createServerClient } from "@/lib/pocketbase/server";
 import { LogoutButton } from "./logout-button";
 import { LayoutDashboard } from "lucide-react";
 
-export async function AuthButton() {
+// Terima prop 'disabled'
+export async function AuthButton({ disabled = false }: { disabled?: boolean }) {
   const pb = await createServerClient();
-
   const user = pb.authStore.model;
 
   return user ? (
@@ -25,8 +25,11 @@ export async function AuthButton() {
       </div>
     </div>
   ) : (
-    <Button asChild size="sm" variant={"outline"}>
-      <Link href="/auth/login">Login</Link>
+    // Terapkan prop 'disabled' ke tombol login
+    <Button asChild size="sm" variant={"outline"} disabled={disabled}>
+      <Link href="/auth/login" aria-disabled={disabled} className={disabled ? "pointer-events-none" : ""}>
+        Login
+      </Link>
     </Button>
   );
 }
