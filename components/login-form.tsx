@@ -73,7 +73,7 @@ export function LoginForm({
                 <Input
                   id="participantNumber"
                   type="text"
-                  placeholder="Contoh: 199208242020121012"
+                  placeholder="Contoh: 20253861-11-2-XXXX"
                   required
                   value={participantNumber}
                   onChange={(e) => setParticipantNumber(e.target.value)}

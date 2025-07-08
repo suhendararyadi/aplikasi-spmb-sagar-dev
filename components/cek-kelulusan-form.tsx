@@ -38,7 +38,7 @@ export function CekKelulusanForm() {
                             id="nomorPendaftaran"
                             value={nomorPendaftaran}
                             onChange={(e) => setNomorPendaftaran(e.target.value)}
-                            placeholder="Contoh: 20251234"
+                            placeholder="Contoh: 20253861-11-2-XXXX"
                             required
                         />
                     </div>

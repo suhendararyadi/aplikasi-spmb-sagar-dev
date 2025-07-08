@@ -93,6 +93,7 @@ export function AddUserForm() {
                         <SelectItem value="KEJUARAAN AKADEMIK">Kejuaraan Akademik</SelectItem>
                         <SelectItem value="KEJUARAAN NON AKADEMIK">Kejuaraan Non Akademik</SelectItem>
                         <SelectItem value="KEPEMIMPINAN">Kepemimpinan</SelectItem>
+                        <SelectItem value="PANTI">Panti</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -101,7 +102,7 @@ export function AddUserForm() {
                 <Select name="acceptedMajor" required>
                     <SelectTrigger><SelectValue placeholder="Pilih jurusan..." /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="Proses Pemetaan">Proses Pemetaan</SelectItem>
+                        <SelectItem value="Dalam Proses Pemetaan">Dalam Proses Pemetaan</SelectItem>
                         <SelectItem value="DPIB">DPIB</SelectItem>
                         <SelectItem value="TEI">TEI</SelectItem>
                         <SelectItem value="TITL">TITL</SelectItem>
