@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, FileText, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { UpdateStatusForm } from "@/components/update-status-form"; // Impor komponen form baru
+import { UpdateStatusForm } from "@/components/update-status-form";
 
 // Tipe untuk data profil lengkap dari PocketBase
 type Profile = {
@@ -26,18 +26,25 @@ type Profile = {
     created?: string | null;
     updated?: string | null;
     role?: 'admin' | 'siswa';
-    status_kelulusan?: string | null; // Tambahkan field baru
+    status_kelulusan?: string | null;
 };
 
+// PERBAIKAN: Definisikan tipe props dengan params sebagai Promise
+// untuk menyesuaikan dengan lingkungan build Vercel Anda.
 interface PageProps {
-    params: { id: string; };
+    params: Promise<{
+        id: string;
+    }>;
 }
 
+// Fungsi untuk mengambil data siswa berdasarkan ID
 async function getStudentData(id: string) {
     const pb = await createServerClient();
+    
     if (!pb.authStore.isValid || pb.authStore.model?.role !== 'admin') {
         redirect('/auth/login');
     }
+
     try {
         const studentProfile: Profile = await pb.collection('users').getOne(id);
         return studentProfile;
@@ -47,6 +54,7 @@ async function getStudentData(id: string) {
     }
 }
 
+// Komponen helper untuk menampilkan baris data agar rapi
 function DataRow({ label, value, children }: { label: string; value?: string | null; children?: React.ReactNode }) {
     return (
         <div className="flex flex-col gap-1">
@@ -56,8 +64,10 @@ function DataRow({ label, value, children }: { label: string; value?: string | n
     );
 }
 
+// PERBAIKAN: Lakukan `await` pada params sebelum menggunakannya.
 export default async function StudentProfilePage({ params }: PageProps) {
-    const student = await getStudentData(params.id);
+    const { id } = await params;
+    const student = await getStudentData(id);
     
     const getFileUrl = (filename: string) => {
         return new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL!).getFileUrl(student, filename);
@@ -81,7 +91,6 @@ export default async function StudentProfilePage({ params }: PageProps) {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
-                    {/* PERBAIKAN: Mengembalikan semua bagian data siswa */}
                     <section>
                         <h3 className="font-semibold text-lg border-b pb-2 mb-4">Data Diri</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -129,7 +138,6 @@ export default async function StudentProfilePage({ params }: PageProps) {
                         </DataRow>
                     </section>
 
-                    {/* PERBAIKAN: Memindahkan form manajemen ke bagian paling bawah */}
                     <section>
                         <h3 className="font-semibold text-lg border-b pb-2 mb-4">Manajemen Status Kelulusan</h3>
                         <div className="p-4 bg-muted/50 rounded-lg">
