@@ -1,6 +1,5 @@
 'use client';
 
-// PERBAIKAN: Impor hook dari 'react' dan 'react-dom' sesuai standar React 19
 import { useActionState, useEffect, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 
@@ -29,7 +28,6 @@ function SubmitButton() {
 }
 
 export function AddUserForm() {
-  // PERBAIKAN: Gunakan 'useActionState' yang baru, bukan 'useFormState'
   const [state, formAction] = useActionState(addUser, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -65,6 +63,18 @@ export function AddUserForm() {
             <Label htmlFor="schoolOrigin">Asal Sekolah</Label>
             <Input id="schoolOrigin" name="schoolOrigin" required />
           </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="jalurPendaftaran">Jalur Pendaftaran</Label>
+            <Select name="jalur_pendaftaran" required>
+                <SelectTrigger><SelectValue placeholder="Pilih jalur pendaftaran..." /></SelectTrigger>
+                <SelectContent>
+                    {/* PERUBAHAN DI SINI */}
+                    <SelectItem value="SPMB">SPMB</SelectItem>
+                    <SelectItem value="PAPS">PAPS</SelectItem>
+                </SelectContent>
+            </Select>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -91,6 +101,7 @@ export function AddUserForm() {
                         <SelectItem value="TKRO">TKRO</SelectItem>
                         <SelectItem value="TKJ">TKJ</SelectItem>
                         <SelectItem value="DKV">DKV</SelectItem>
+                        <SelectItem value="Dalam Proses Pemetaan">Dalam Proses Pemetaan</SelectItem>
                     </SelectContent>
                 </Select>
             </div>

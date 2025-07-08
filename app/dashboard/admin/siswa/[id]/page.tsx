@@ -27,10 +27,10 @@ type Profile = {
     updated?: string | null;
     role?: 'admin' | 'siswa';
     status_kelulusan?: string | null;
+    jalur_pendaftaran?: string | null;
 };
 
-// PERBAIKAN: Definisikan tipe props dengan params sebagai Promise
-// untuk menyesuaikan dengan lingkungan build Vercel Anda.
+// Definisikan tipe props dengan params sebagai Promise
 interface PageProps {
     params: Promise<{
         id: string;
@@ -64,13 +64,13 @@ function DataRow({ label, value, children }: { label: string; value?: string | n
     );
 }
 
-// PERBAIKAN: Lakukan `await` pada params sebelum menggunakannya.
+// Lakukan `await` pada params sebelum menggunakannya.
 export default async function StudentProfilePage({ params }: PageProps) {
     const { id } = await params;
     const student = await getStudentData(id);
     
     const getFileUrl = (filename: string) => {
-        return new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL!).getFileUrl(student, filename);
+        return new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL!).files.getURL(student, filename);
     }
 
     return (
@@ -97,7 +97,8 @@ export default async function StudentProfilePage({ params }: PageProps) {
                             <DataRow label="Nama Lengkap" value={student.name} />
                             <DataRow label="Nomor Pendaftaran" value={student.registration_number} />
                             <DataRow label="Asal Sekolah" value={student.school_origin} />
-                            <DataRow label="Email (Sistem)" value={student.email} />
+                            {/* Baris ini akan menampilkan nilai "SPMB" atau "PAPS" dari database */}
+                            <DataRow label="Jalur Pendaftaran" value={student.jalur_pendaftaran} />
                         </div>
                     </section>
                     
@@ -139,10 +140,14 @@ export default async function StudentProfilePage({ params }: PageProps) {
                     </section>
 
                     <section>
-                        <h3 className="font-semibold text-lg border-b pb-2 mb-4">Manajemen Status Kelulusan</h3>
+                        <h3 className="font-semibold text-lg border-b pb-2 mb-4">Manajemen Admin</h3>
                         <div className="p-4 bg-muted/50 rounded-lg">
-                           <p className="text-sm text-muted-foreground mb-4">Ubah status kelulusan untuk siswa ini. Perubahan akan langsung terlihat di halaman cek kelulusan publik.</p>
-                           <UpdateStatusForm studentId={student.id} currentStatus={student.status_kelulusan} />
+                           <p className="text-sm text-muted-foreground mb-4">Ubah data administratif untuk siswa ini.</p>
+                           <UpdateStatusForm 
+                                studentId={student.id} 
+                                currentStatus={student.status_kelulusan} 
+                                currentJalurPendaftaran={student.jalur_pendaftaran}
+                           />
                         </div>
                     </section>
                 </CardContent>

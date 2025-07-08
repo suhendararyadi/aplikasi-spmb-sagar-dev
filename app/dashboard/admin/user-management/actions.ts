@@ -19,12 +19,14 @@ export async function addUser(prevState: FormState, formData: FormData): Promise
 
     const registrationNumber = formData.get('registrationNumber') as string;
     const fullName = formData.get('fullName') as string;
+    const jalurPendaftaran = formData.get('jalur_pendaftaran') as string;
+    const acceptedMajor = formData.get('acceptedMajor') as string;
 
     if (!registrationNumber || !fullName) {
         return { error: { message: 'Nomor Pendaftaran dan Nama Lengkap wajib diisi.' } };
     }
 
-    const data = {
+    const userData = {
         email: `${registrationNumber}@smknegeri9garut.sch.id`,
         password: registrationNumber,
         passwordConfirm: registrationNumber,
@@ -32,44 +34,53 @@ export async function addUser(prevState: FormState, formData: FormData): Promise
         name: fullName,
         registration_number: registrationNumber,
         school_origin: formData.get('schoolOrigin') as string,
+        jalur_pendaftaran: jalurPendaftaran,
         entry_path: formData.get('entryPath') as string,
-        accepted_major: formData.get('acceptedMajor') as string,
+        accepted_major: acceptedMajor,
         role: "siswa",
         status: "belum_mengisi",
-        username: registrationNumber 
+        username: registrationNumber,
+        status_kelulusan: "PROSES SELEKSI", // Set default status
     };
 
     try {
-        await pb.collection('users').create(data);
+        // Langkah 1: Buat user di collection utama 'users'
+        await pb.collection('users').create(userData);
+
+        // PERBAIKAN: Langkah 2 - Buat juga record di 'status_kelulusan'
+        const publicData = {
+            nomor_pendaftaran: registrationNumber,
+            nama_lengkap: fullName,
+            status: "PROSES SELEKSI",
+            jurusan_diterima: acceptedMajor,
+            jalur_pendaftaran: jalurPendaftaran,
+        };
+        await pb.collection('status_kelulusan').create(publicData);
+
     } catch (err) {
         if (err instanceof ClientResponseError) {
              const responseData = err.data.data;
              let detailedError = "Gagal membuat record.";
              if (responseData) {
-                const fieldErrors = Object.keys(responseData).map(key => {
-                    return `${key}: ${responseData[key].message}`;
-                }).join(', ');
-
-                if (fieldErrors) {
-                    detailedError = `Validasi Gagal -> ${fieldErrors}`;
-                }
+                const fieldErrors = Object.keys(responseData).map(key => `${key}: ${responseData[key].message}`).join(', ');
+                if (fieldErrors) detailedError = `Validasi Gagal -> ${fieldErrors}`;
              }
              return { error: { message: `Gagal membuat akun. ${detailedError}` }};
         }
         return { error: { message: `Terjadi kesalahan tak terduga: ${(err as Error).message}` }};
     }
 
-    // PERBAIKAN: Revalidasi 'layout' untuk memastikan data di dashboard admin diperbarui.
     revalidatePath('/dashboard/admin', 'layout');
     revalidatePath('/dashboard/admin/user-management');
     
-    return { successMessage: 'Pengguna berhasil ditambahkan!' };
+    return { successMessage: 'Pengguna berhasil ditambahkan dan status kelulusan awal telah dibuat!' };
 }
 
 type ImportedStudent = {
     registration_number: string;
     full_name: string;
     school_origin: string;
+    jalur_pendaftaran: string;
     entry_path: string;
     accepted_major: string;
 };
@@ -86,7 +97,7 @@ export async function importUsers(users: ImportedStudent[]): Promise<{ successCo
     const errors: string[] = [];
 
     for (const user of users) {
-        const data = {
+        const userData = {
             email: `${user.registration_number}@smknegeri9garut.sch.id`,
             password: user.registration_number,
             passwordConfirm: user.registration_number,
@@ -94,15 +105,29 @@ export async function importUsers(users: ImportedStudent[]): Promise<{ successCo
             name: user.full_name,
             registration_number: user.registration_number,
             school_origin: user.school_origin,
+            jalur_pendaftaran: user.jalur_pendaftaran,
             entry_path: user.entry_path,
             accepted_major: user.accepted_major,
             role: "siswa",
             status: "belum_mengisi",
-            username: user.registration_number
+            username: user.registration_number,
+            status_kelulusan: "PROSES SELEKSI",
         };
 
         try {
-            await pb.collection('users').create(data);
+            // Buat user di collection 'users'
+            await pb.collection('users').create(userData);
+
+            // PERBAIKAN: Buat juga record di 'status_kelulusan' untuk impor massal
+            const publicData = {
+                nomor_pendaftaran: user.registration_number,
+                nama_lengkap: user.full_name,
+                status: "PROSES SELEKSI",
+                jurusan_diterima: user.accepted_major,
+                jalur_pendaftaran: user.jalur_pendaftaran,
+            };
+            await pb.collection('status_kelulusan').create(publicData);
+
             successCount++;
         } catch (e) {
             errorCount++;
@@ -121,7 +146,6 @@ export async function importUsers(users: ImportedStudent[]): Promise<{ successCo
     }
 
     if (successCount > 0) {
-        // PERBAIKAN: Revalidasi 'layout' untuk memastikan data di dashboard admin diperbarui.
         revalidatePath('/dashboard/admin', 'layout');
         revalidatePath('/dashboard/admin/user-management');
     }

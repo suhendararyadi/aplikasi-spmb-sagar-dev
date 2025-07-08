@@ -7,20 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { createClient } from "@/lib/pocketbase/client";
 import { CheckCircle, Edit, AlertTriangle, Loader2, FileText } from "lucide-react";
+import { Separator } from "@/components/ui/separator"; // PERBAIKAN: Tambahkan impor ini
 
 // Tipe Profile sekarang menyertakan field untuk file
 type Profile = {
     id: string;
-    collectionId: string; // PocketBase menyertakan ini
+    collectionId: string;
     name?: string | null;
     registration_number?: string | null;
     school_origin?: string | null;
@@ -29,18 +23,17 @@ type Profile = {
     is_reconfirm?: boolean | null;
     rejection_reason?: string | null;
     status?: string | null;
-    surat_pernyataan?: string | null; // Nama file yang sudah terupload
+    surat_pernyataan?: string | null;
 };
 
 const pb = createClient();
 
-// Komponen untuk menampilkan data yang sudah di-submit, termasuk link download
+// Komponen untuk menampilkan ringkasan data yang sudah di-submit
 const SubmittedDataSummary = ({ profile, onEdit }: { profile: Profile, onEdit: () => void }) => {
   
   const getFileUrl = () => {
     if (!profile.surat_pernyataan) return "#";
-    // Menggunakan helper PocketBase untuk membuat URL file yang valid
-    return pb.getFileUrl(profile, profile.surat_pernyataan);
+    return pb.files.getURL(profile, profile.surat_pernyataan); // Menggunakan getURL yang baru
   }
 
   return (
@@ -67,7 +60,6 @@ const SubmittedDataSummary = ({ profile, onEdit }: { profile: Profile, onEdit: (
           {profile.is_reconfirm === false && (
             <div><Label className="text-muted-foreground">Alasan Tidak Melanjutkan</Label><p className="font-semibold">{profile.rejection_reason}</p></div>
           )}
-          {/* Menampilkan link download jika file ada */}
           {profile.surat_pernyataan && (
              <div><Label className="text-muted-foreground">Surat Pernyataan</Label><p><a href={getFileUrl()} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold flex items-center gap-2"><FileText size={16}/>Lihat Dokumen</a></p></div>
           )}
@@ -76,7 +68,7 @@ const SubmittedDataSummary = ({ profile, onEdit }: { profile: Profile, onEdit: (
 
       <div className="text-center pt-4">
         <Button onClick={onEdit}>
-          <Edit className="mr-2 h-4 w-4" /> Ubah Data
+          <Edit className="mr-2 h-4 w-4" /> Ubah Data Konfirmasi
         </Button>
       </div>
     </div>
@@ -88,13 +80,9 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
     const router = useRouter();
     const [isEditing, setIsEditing] = useState(profile.status !== 'selesai');
     
-    const [name, setName] = useState(profile.name || '');
-    const [schoolOrigin, setSchoolOrigin] = useState(profile.school_origin || '');
-    const [entryPath, setEntryPath] = useState(profile.entry_path || '');
-    const [acceptedMajor, setAcceptedMajor] = useState(profile.accepted_major || '');
+    // State yang bisa diubah oleh siswa
     const [isReconfirm, setIsReconfirm] = useState(profile.is_reconfirm?.toString() || '');
     const [rejectionReason, setRejectionReason] = useState(profile.rejection_reason || '');
-    // State baru untuk menampung file yang akan diupload
     const [pernyataanFile, setPernyataanFile] = useState<File | null>(null);
 
     const [isLoading, setIsLoading] = useState(false);
@@ -102,7 +90,7 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
 
     const getFileUrl = () => {
       if (!profile.surat_pernyataan) return "#";
-      return pb.getFileUrl(profile, profile.surat_pernyataan);
+      return pb.files.getURL(profile, profile.surat_pernyataan); // Menggunakan getURL yang baru
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -110,22 +98,18 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
         setIsLoading(true);
         setNotification(null);
 
-        // Validasi, pastikan file sudah diunggah jika belum ada sebelumnya
-        if (!entryPath || !acceptedMajor || !isReconfirm || !schoolOrigin || (!pernyataanFile && !profile.surat_pernyataan) ) {
-          setNotification({type: 'error', message: "Harap isi semua kolom, termasuk mengunggah Surat Pernyataan."});
+        // Validasi hanya untuk field yang bisa diisi siswa
+        if (!isReconfirm || (!pernyataanFile && !profile.surat_pernyataan) ) {
+          setNotification({type: 'error', message: "Harap isi Konfirmasi Melanjutkan dan unggah Surat Pernyataan."});
           setIsLoading(false);
           return;
         }
 
         const formData = new FormData();
-        formData.append('name', name);
-        formData.append('school_origin', schoolOrigin);
-        formData.append('entry_path', entryPath);
-        formData.append('accepted_major', acceptedMajor);
+        // Hanya kirim data yang bisa diubah oleh siswa
         formData.append('is_reconfirm', isReconfirm);
         formData.append('rejection_reason', isReconfirm === 'false' ? rejectionReason : '');
         formData.append('status', 'selesai');
-        // Hanya tambahkan file ke form data jika ada file baru yang dipilih
         if (pernyataanFile) {
           formData.append('surat_pernyataan', pernyataanFile);
         }
@@ -134,7 +118,6 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
             const userId = pb.authStore.model?.id;
             if (!userId) throw new Error("Sesi tidak valid. Silakan login ulang.");
             
-            // Kirim form data ke PocketBase
             await pb.collection('users').update(userId, formData);
 
             setNotification({type: 'success', message: 'Data berhasil disimpan!'});
@@ -164,48 +147,27 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="fullName">Nama Lengkap</Label>
-                    <Input id="fullName" value={name} onChange={(e) => setName(e.target.value)} disabled={isLoading} />
+                    <Input id="fullName" value={profile.name || ''} readOnly disabled className="bg-muted/50" />
                 </div>
             </div>
 
             <div className="space-y-2">
                 <Label htmlFor="schoolOrigin">Asal Sekolah</Label>
-                <Input id="schoolOrigin" placeholder="Contoh: SMPN 1 CIGUGUR" value={schoolOrigin} onChange={(e) => setSchoolOrigin(e.target.value)} required disabled={isLoading}/>
+                <Input id="schoolOrigin" value={profile.school_origin || ''} readOnly disabled className="bg-muted/50"/>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="entryPath">Jalur Masuk</Label>
-                     <Select name="entryPath" onValueChange={setEntryPath} value={entryPath} required disabled={isLoading}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Pilih jalur masuk" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Anak Guru">Anak Guru</SelectItem>
-                            <SelectItem value="Mutasi">Mutasi</SelectItem>
-                            <SelectItem value="KETM">KETM</SelectItem>
-                            <SelectItem value="Domisili Terdekat">Domisili Terdekat</SelectItem>
-                            <SelectItem value="Persiapan Kelas Industri">Persiapan Kelas Industri</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <Input id="entryPath" value={profile.entry_path || ''} readOnly disabled className="bg-muted/50"/>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="acceptedMajor">Diterima di Program Keahlian</Label>
-                    <Select name="acceptedMajor" onValueChange={setAcceptedMajor} value={acceptedMajor} required disabled={isLoading}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Pilih program keahlian" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="DPIB">Desain Pemodelan dan Informasi Bangunan (DPIB)</SelectItem>
-                            <SelectItem value="TEI">Teknik Elektronika Industri (TEI)</SelectItem>
-                            <SelectItem value="TITL">Teknik Instalasi Tenaga Listrik (TITL)</SelectItem>
-                            <SelectItem value="TKRO">Teknik Kendaraan Ringan Otomotif (TKRO)</SelectItem>
-                            <SelectItem value="TKJ">Teknik Jaringan Komputer dan Telekomunikasi (TKJ)</SelectItem>
-                            <SelectItem value="DKV">Desain Komunikasi Visual (DKV)</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <Input id="acceptedMajor" value={profile.accepted_major || ''} readOnly disabled className="bg-muted/50"/>
                 </div>
             </div>
+
+            <Separator />
 
             <div className="space-y-3">
                 <Label>Konfirmasi kesiapan melanjutkan / daftar ulang</Label>
@@ -235,7 +197,6 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
                 </div>
             )}
             
-            {/* Field Upload Baru */}
             <div className="space-y-3">
               <Label htmlFor="surat_pernyataan">Dokumen Surat Pernyataan</Label>
               <Input 
@@ -248,7 +209,6 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
               <p className="text-sm text-muted-foreground">
                 Unggah file PDF atau Gambar (JPG, PNG). Maksimal 5MB.
               </p>
-              {/* Menampilkan file yang sudah ada */}
               {profile.surat_pernyataan && !pernyataanFile && (
                 <div className="text-sm flex items-center gap-2 text-green-600">
                   <FileText size={16} />

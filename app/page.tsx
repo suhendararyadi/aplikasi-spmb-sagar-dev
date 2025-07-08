@@ -21,12 +21,11 @@ export default function Home() {
         </nav>
         {/* --- AKHIR HEADER --- */}
 
-        {/* PERBAIKAN: Tata letak konten utama diatur ulang */}
         <div className="w-full max-w-5xl px-5 flex flex-col items-center">
           {/* Bagian Judul dan Deskripsi */}
           <SpmbHero />
           
-          {/* Bagian Cek Kelulusan dipindahkan ke atas */}
+          {/* Bagian Cek Kelulusan */}
           <section id="cek-kelulusan" className="w-full pb-20 -mt-10 md:-mt-16">
             <CekKelulusanForm />
           </section>

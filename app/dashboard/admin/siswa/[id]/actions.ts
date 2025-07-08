@@ -9,59 +9,65 @@ type ActionResult = {
     success?: string;
 }
 
-// Action ini akan menangani update status kelulusan
 export async function updateStatusKelulusan(studentId: string, prevState: ActionResult, formData: FormData): Promise<ActionResult> {
     const pb = await createServerClient();
 
-    // Validasi sesi admin
     if (!pb.authStore.isValid || pb.authStore.model?.role !== 'admin') {
         return { error: 'Akses ditolak.' };
     }
 
     const newStatus = formData.get('status_kelulusan') as string;
-    if (!newStatus) {
-        return { error: 'Status kelulusan harus dipilih.' };
+    const newJalurPendaftaran = formData.get('jalur_pendaftaran') as string;
+
+    // PERBAIKAN: Ganti tipe 'any' dengan tipe yang lebih spesifik.
+    // Karena kita hanya menyimpan string, kita bisa gunakan 'string'.
+    const dataToUpdate: { [key: string]: string } = {};
+
+    if (newStatus) {
+        dataToUpdate.status_kelulusan = newStatus;
+    }
+    if (newJalurPendaftaran) {
+        dataToUpdate.jalur_pendaftaran = newJalurPendaftaran;
+    }
+
+    if (Object.keys(dataToUpdate).length === 0) {
+        return { error: 'Tidak ada data yang diubah.' };
     }
 
     try {
-        // Langkah 1: Update data master di collection 'users'
-        const updatedUser = await pb.collection('users').update(studentId, {
-            'status_kelulusan': newStatus,
-        });
+        const updatedUser = await pb.collection('users').update(studentId, dataToUpdate);
 
-        // Data yang akan dipublikasikan
-        const publicData = {
-            nomor_pendaftaran: updatedUser.registration_number,
-            nama_lengkap: updatedUser.name,
-            status: newStatus,
-            jurusan_diterima: updatedUser.accepted_major,
-        };
+        if (newStatus) {
+            const publicData = {
+                nomor_pendaftaran: updatedUser.registration_number,
+                nama_lengkap: updatedUser.name,
+                status: newStatus,
+                jurusan_diterima: updatedUser.accepted_major,
+                jalur_pendaftaran: updatedUser.jalur_pendaftaran,
+            };
 
-        // Langkah 2: Logika "Upsert" untuk collection publik 'status_kelulusan'
-        try {
-            // Coba cari record yang sudah ada
-            const existingPublicRecord = await pb.collection('status_kelulusan').getFirstListItem(`nomor_pendaftaran = "${updatedUser.registration_number}"`);
-            // Jika ada, update
-            await pb.collection('status_kelulusan').update(existingPublicRecord.id, publicData);
-        } catch (error) {
-            // PERBAIKAN: Gunakan tipe yang lebih spesifik
-            if (error instanceof ClientResponseError && error.status === 404) {
-                // Jika tidak ada (error 404), buat baru
-                await pb.collection('status_kelulusan').create(publicData);
-            } else {
-                throw error; // Lemparkan error lain jika bukan 404
+            try {
+                const existingPublicRecord = await pb.collection('status_kelulusan').getFirstListItem(`nomor_pendaftaran = "${updatedUser.registration_number}"`);
+                await pb.collection('status_kelulusan').update(existingPublicRecord.id, publicData);
+            } catch (error) {
+                if (error instanceof ClientResponseError && error.status === 404) {
+                    await pb.collection('status_kelulusan').create(publicData);
+                } else {
+                    throw error;
+                }
             }
         }
 
-        // Revalidasi path agar data di halaman profil langsung terupdate
         revalidatePath(`/dashboard/admin/siswa/${studentId}`);
-        return { success: 'Status kelulusan berhasil diperbarui!' };
+        return { success: 'Data siswa berhasil diperbarui!' };
 
     } catch (error) {
-        // PERBAIKAN: Gunakan tipe yang lebih spesifik
         console.error("Gagal update status:", error);
         if (error instanceof ClientResponseError) {
-            return { error: `Terjadi kesalahan: ${error.originalError}` };
+            return { error: `Terjadi kesalahan: ${error.message}` };
+        }
+        if (error instanceof Error) {
+            return { error: `Terjadi kesalahan tak terduga: ${error.message}` };
         }
         return { error: `Terjadi kesalahan tak terduga.` };
     }

@@ -47,7 +47,6 @@ export function CekKelulusanForm() {
                     </Button>
                 </form>
 
-                {/* Tampilan Hasil */}
                 {result && (
                     <div className="mt-6">
                         {'error' in result ? (
@@ -75,14 +74,18 @@ export function CekKelulusanForm() {
                                 {result.status === 'LULUS' && (
                                     <>
                                         <h3 className="text-xl font-bold text-green-700">SELAMAT, ANDA DINYATAKAN LULUS!</h3>
-                                        <p className="mt-2">Anda diterima di Program Keahlian: <strong className="text-green-800">{result.jurusan_diterima}</strong>.</p>
+                                        {/* PERBAIKAN: Hanya tampilkan jika datanya ada */}
+                                        {result.jalur_pendaftaran && (
+                                            <p className="mt-2">Melalui jalur pendaftaran: <strong className="text-green-800">{result.jalur_pendaftaran}</strong>.</p>
+                                        )}
+                                        <p className="mt-1">Anda diterima di Program Keahlian: <strong className="text-green-800">{result.jurusan_diterima}</strong>.</p>
                                         <p className="text-sm mt-2">Silakan lanjutkan ke tahap Pendaftaran Ulang dengan login ke Portal Siswa.</p>
                                     </>
                                 )}
                                 {result.status === 'TIDAK LULUS' && (
                                     <>
                                         <h3 className="text-xl font-bold text-red-700">MOHON MAAF</h3>
-                                        <p className="mt-2">Berdasarkan hasil seleksi, Anda dinyatakan **TIDAK LULUS**. Tetap semangat dan jangan berkecil hati.</p>
+                                        <p className="mt-2">Berdasarkan hasil seleksi, Anda dinyatakan <strong>TIDAK LULUS</strong>. Tetap semangat dan jangan berkecil hati. Silahkan melanjutkan mendaftar di sekolah Swasta terdekat.</p>
                                     </>
                                 )}
                                 {result.status === 'PROSES SELEKSI' && (
