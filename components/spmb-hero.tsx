@@ -2,8 +2,8 @@
 // Jangan lupa hapus file `components/hero.tsx` yang lama.
 
 import { Button } from "./ui/button";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+// import Link from "next/link";
+// import { ArrowRight } from "lucide-react";
 
 export function SpmbHero() {
   return (
@@ -19,9 +19,9 @@ export function SpmbHero() {
       </p>
       <div className="flex gap-4 mt-4">
         <Button asChild size="lg">
-          <Link href="/auth/login">
+          {/* <Link href="/auth/login">
             Login Sekarang <ArrowRight className="ml-2 h-5 w-5" />
-          </Link>
+          </Link> */}
         </Button>
       </div>
     </div>
