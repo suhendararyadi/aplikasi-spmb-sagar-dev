@@ -4,11 +4,30 @@ import { ClientResponseError } from 'pocketbase';
 import { revalidatePath } from 'next/cache';
 import { createServerClient } from '@/lib/pocketbase/server';
 
+// --- Tipe Data dan State ---
+
 interface FormState {
   error?: { message: string } | null;
   data?: object | null;
   successMessage?: string | null;
 }
+
+type ImportedStudent = {
+    registration_number: string;
+    full_name: string;
+    school_origin: string;
+    jalur_pendaftaran: string;
+    entry_path: string;
+    accepted_major: string;
+};
+
+type KelulusanData = {
+    registration_number: string;
+    status_kelulusan: 'LULUS' | 'TIDAK LULUS' | 'PROSES SELEKSI';
+};
+
+
+// --- Server Action untuk Menambah Satu Pengguna ---
 
 export async function addUser(prevState: FormState, formData: FormData): Promise<FormState> {
     const pb = await createServerClient();
@@ -40,14 +59,12 @@ export async function addUser(prevState: FormState, formData: FormData): Promise
         role: "siswa",
         status: "belum_mengisi",
         username: registrationNumber,
-        status_kelulusan: "PROSES SELEKSI", // Set default status
+        status_kelulusan: "PROSES SELEKSI",
     };
 
     try {
-        // Langkah 1: Buat user di collection utama 'users'
         await pb.collection('users').create(userData);
 
-        // PERBAIKAN: Langkah 2 - Buat juga record di 'status_kelulusan'
         const publicData = {
             nomor_pendaftaran: registrationNumber,
             nama_lengkap: fullName,
@@ -76,14 +93,8 @@ export async function addUser(prevState: FormState, formData: FormData): Promise
     return { successMessage: 'Pengguna berhasil ditambahkan dan status kelulusan awal telah dibuat!' };
 }
 
-type ImportedStudent = {
-    registration_number: string;
-    full_name: string;
-    school_origin: string;
-    jalur_pendaftaran: string;
-    entry_path: string;
-    accepted_major: string;
-};
+
+// --- Server Action untuk Impor Pengguna Massal ---
 
 export async function importUsers(users: ImportedStudent[]): Promise<{ successCount: number; errorCount: number; errors: string[] }> {
     const pb = await createServerClient();
@@ -115,10 +126,8 @@ export async function importUsers(users: ImportedStudent[]): Promise<{ successCo
         };
 
         try {
-            // Buat user di collection 'users'
             await pb.collection('users').create(userData);
 
-            // PERBAIKAN: Buat juga record di 'status_kelulusan' untuk impor massal
             const publicData = {
                 nomor_pendaftaran: user.registration_number,
                 nama_lengkap: user.full_name,
@@ -148,6 +157,63 @@ export async function importUsers(users: ImportedStudent[]): Promise<{ successCo
     if (successCount > 0) {
         revalidatePath('/dashboard/admin', 'layout');
         revalidatePath('/dashboard/admin/user-management');
+    }
+
+    return { successCount, errorCount, errors };
+}
+
+
+// --- Server Action untuk Impor Status Kelulusan ---
+
+export async function importKelulusanStatus(data: KelulusanData[]): Promise<{ successCount: number; errorCount: number; errors: string[] }> {
+    const pb = await createServerClient();
+    
+    if (!pb.authStore.isValid || pb.authStore.model?.role !== 'admin') {
+      throw new Error('Akses ditolak. Anda bukan admin.');
+    }
+    
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
+
+    for (const item of data) {
+        try {
+            const user = await pb.collection('users').getFirstListItem(`registration_number = "${item.registration_number}"`);
+            
+            await pb.collection('users').update(user.id, {
+                status_kelulusan: item.status_kelulusan
+            });
+
+            const publicData = {
+                status: item.status_kelulusan,
+                jurusan_diterima: user.accepted_major, 
+                nama_lengkap: user.name,
+                jalur_pendaftaran: user.jalur_pendaftaran
+            };
+
+            try {
+                const publicRecord = await pb.collection('status_kelulusan').getFirstListItem(`nomor_pendaftaran = "${item.registration_number}"`);
+                await pb.collection('status_kelulusan').update(publicRecord.id, publicData);
+            } catch (e) {
+                if (e instanceof ClientResponseError && e.status === 404) {
+                    await pb.collection('status_kelulusan').create({
+                        ...publicData,
+                        nomor_pendaftaran: item.registration_number,
+                    });
+                } else {
+                    throw e;
+                }
+            }
+            
+            successCount++;
+        } catch (e) {
+            errorCount++;
+            errors.push(`Gagal update no. pendaftaran ${item.registration_number}: ${(e as Error).message}`);
+        }
+    }
+
+    if (successCount > 0) {
+        revalidatePath('/dashboard/admin', 'layout');
     }
 
     return { successCount, errorCount, errors };

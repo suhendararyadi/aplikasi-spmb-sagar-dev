@@ -1,5 +1,6 @@
 'use client';
 
+// Menggunakan hook dari 'react' dan 'react-dom'
 import { useActionState, useEffect, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 
@@ -69,7 +70,6 @@ export function AddUserForm() {
             <Select name="jalur_pendaftaran" required>
                 <SelectTrigger><SelectValue placeholder="Pilih jalur pendaftaran..." /></SelectTrigger>
                 <SelectContent>
-                    {/* PERUBAHAN DI SINI */}
                     <SelectItem value="SPMB">SPMB</SelectItem>
                     <SelectItem value="PAPS">PAPS</SelectItem>
                 </SelectContent>
@@ -82,11 +82,17 @@ export function AddUserForm() {
                 <Select name="entryPath" required>
                     <SelectTrigger><SelectValue placeholder="Pilih jalur..." /></SelectTrigger>
                     <SelectContent>
+                        {/* Opsi yang sudah diperbarui ada di sini */}
                         <SelectItem value="Anak Guru">Anak Guru</SelectItem>
                         <SelectItem value="Mutasi">Mutasi</SelectItem>
                         <SelectItem value="KETM">KETM</SelectItem>
                         <SelectItem value="Domisili Terdekat">Domisili Terdekat</SelectItem>
                         <SelectItem value="Persiapan Kelas Industri">Persiapan Kelas Industri</SelectItem>
+                        <SelectItem value="PRESTASI NILAI RAPOR">Prestasi Nilai Rapor</SelectItem>
+                        <SelectItem value="Bina Lingkungan Geografis Terdekat">Bina Lingkungan Geografis Terdekat</SelectItem>
+                        <SelectItem value="KEJUARAAN AKADEMIK">Kejuaraan Akademik</SelectItem>
+                        <SelectItem value="KEJUARAAN NON AKADEMIK">Kejuaraan Non Akademik</SelectItem>
+                        <SelectItem value="KEPEMIMPINAN">Kepemimpinan</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -95,13 +101,13 @@ export function AddUserForm() {
                 <Select name="acceptedMajor" required>
                     <SelectTrigger><SelectValue placeholder="Pilih jurusan..." /></SelectTrigger>
                     <SelectContent>
+                        <SelectItem value="Proses Pemetaan">Proses Pemetaan</SelectItem>
                         <SelectItem value="DPIB">DPIB</SelectItem>
                         <SelectItem value="TEI">TEI</SelectItem>
                         <SelectItem value="TITL">TITL</SelectItem>
                         <SelectItem value="TKRO">TKRO</SelectItem>
                         <SelectItem value="TKJ">TKJ</SelectItem>
                         <SelectItem value="DKV">DKV</SelectItem>
-                        <SelectItem value="Dalam Proses Pemetaan">Dalam Proses Pemetaan</SelectItem>
                     </SelectContent>
                 </Select>
             </div>

@@ -1,5 +1,3 @@
-// PERHATIAN: Buat file baru ini di `components/import-users-card.tsx`.
-
 'use client';
 
 import { useState, useRef } from 'react';
@@ -16,6 +14,8 @@ type ImportedStudent = {
     registration_number: string;
     full_name: string;
     school_origin: string;
+    // Tambahkan kolom baru
+    jalur_pendaftaran: string;
     entry_path: string;
     accepted_major: string;
 };
@@ -44,8 +44,8 @@ export function ImportUsersCard() {
             header: true,
             skipEmptyLines: true,
             complete: (results) => {
-                // Pastikan nama kolom sesuai
-                const requiredColumns = ['registration_number', 'full_name', 'school_origin', 'entry_path', 'accepted_major'];
+                // PERBAIKAN: Tambahkan 'jalur_pendaftaran' ke kolom yang wajib ada
+                const requiredColumns = ['registration_number', 'full_name', 'school_origin', 'jalur_pendaftaran', 'entry_path', 'accepted_major'];
                 const fileColumns = results.meta.fields || [];
                 const hasAllColumns = requiredColumns.every(col => fileColumns.includes(col));
 
@@ -80,10 +80,12 @@ export function ImportUsersCard() {
             <CardHeader>
                 <CardTitle>Impor Pengguna dari CSV</CardTitle>
                 <CardDescription>
+                    {/* PERBAIKAN: Perbarui deskripsi untuk menyertakan kolom baru */}
                     Unggah file CSV untuk membuat banyak akun siswa sekaligus. Pastikan file memiliki kolom: 
                     <code className="text-xs font-mono bg-muted p-1 rounded mx-1">registration_number</code>,
                     <code className="text-xs font-mono bg-muted p-1 rounded mx-1">full_name</code>,
                     <code className="text-xs font-mono bg-muted p-1 rounded mx-1">school_origin</code>,
+                    <code className="text-xs font-mono bg-muted p-1 rounded mx-1">jalur_pendaftaran</code>,
                     <code className="text-xs font-mono bg-muted p-1 rounded mx-1">entry_path</code>,
                     <code className="text-xs font-mono bg-muted p-1 rounded mx-1">accepted_major</code>.
                 </CardDescription>
@@ -103,7 +105,7 @@ export function ImportUsersCard() {
                                     <TableRow>
                                         <TableHead>No. Pendaftaran</TableHead>
                                         <TableHead>Nama Lengkap</TableHead>
-                                        <TableHead>Asal Sekolah</TableHead>
+                                        <TableHead>Jalur Pendaftaran</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -111,7 +113,7 @@ export function ImportUsersCard() {
                                         <TableRow key={index}>
                                             <TableCell>{row.registration_number}</TableCell>
                                             <TableCell>{row.full_name}</TableCell>
-                                            <TableCell>{row.school_origin}</TableCell>
+                                            <TableCell>{row.jalur_pendaftaran}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
