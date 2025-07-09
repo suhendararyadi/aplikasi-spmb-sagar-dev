@@ -80,7 +80,7 @@ export function CekKelulusanForm() {
                                         )}
                                         <p className="mt-1">Anda diterima di Program Keahlian: <strong className="text-green-800">{result.jurusan_diterima}</strong>.</p>
                                         <p className="text-sm mt-2">Silakan lanjutkan ke tahap Daftar Ulang mulai tanggal 10-11 Juli 2025 dengan datang langsung ke SMKN 9 Garut dan membawa materai 10 rb. 
-                                            Jika pada waktu yang telah ditentukan siswa yang dinyatakan lolos tidak daftar ulang maka di anggap mengundurkan diri.</p>
+                                            Jika pada waktu yang telah ditentukan siswa yang dinyatakan lolos tidak daftar ulang maka dianggap mengundurkan diri.</p>
                                     </>
                                 )}
                                 {result.status === 'TIDAK LULUS' && (
