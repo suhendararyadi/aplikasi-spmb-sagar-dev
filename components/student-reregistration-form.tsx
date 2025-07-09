@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { createClient } from "@/lib/pocketbase/client";
-import { CheckCircle, Edit, AlertTriangle, Loader2, FileText } from "lucide-react";
+import { CheckCircle, Edit, AlertTriangle, Loader2, FileText, Download } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 // Tipe Profile sekarang menyertakan field untuk file
@@ -151,7 +151,6 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
     
     return (
         <form onSubmit={handleSubmit} className="space-y-8">
-            {/* PERUBAHAN: Data ditampilkan sebagai teks, bukan form input */}
             <div className="space-y-4">
                 <h3 className="font-semibold text-lg">Data Penerimaan Anda</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -166,7 +165,6 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
 
             <Separator />
 
-            {/* Bagian ini tetap berupa form yang bisa diisi */}
             <div className="space-y-6">
                 <h3 className="font-semibold text-lg">Konfirmasi Pendaftaran Ulang</h3>
                 <div className="space-y-3">
@@ -198,7 +196,18 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
                 )}
                 
                 <div className="space-y-3">
-                  <Label htmlFor="surat_pernyataan">Unggah Dokumen Surat Pernyataan</Label>
+                  {/* PERUBAHAN: Menambahkan link unduh di sini */}
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="surat_pernyataan">Unggah Dokumen Surat Pernyataan</Label>
+                    <a 
+                      href="/contoh-surat-pernyataan.pdf" 
+                      download 
+                      className="text-sm text-primary hover:underline flex items-center gap-1"
+                    >
+                      <Download size={14} />
+                      Unduh Contoh
+                    </a>
+                  </div>
                   <Input 
                     id="surat_pernyataan" 
                     type="file" 
