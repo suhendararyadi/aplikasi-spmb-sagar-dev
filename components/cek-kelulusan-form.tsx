@@ -8,6 +8,24 @@ import { Label } from './ui/label';
 import { checkKelulusan, type KelulusanResult } from '@/app/actions';
 import { Loader2, Search, PartyPopper, XCircle, AlertCircle } from 'lucide-react';
 
+// Pemetaan dari singkatan ke nama jurusan lengkap
+const majorMap: { [key: string]: string } = {
+    'DPIB': 'Desain Pemodelan dan Informasi Bangunan (DPIB)',
+    'TEI': 'Teknik Elektronika Industri (TEI)',
+    'TITL': 'Teknik Instalasi Tenaga Listrik (TITL)',
+    'TKRO': 'Teknik Kendaraan Ringan Otomotif (TKRO)',
+    'TKJ': 'Teknik Jaringan Komputer dan Telekomunikasi (TKJ)',
+    'DKV': 'Desain Komunikasi Visual (DKV)',
+    'Proses Pemetaan': 'Dalam Proses Pemetaan',
+};
+
+// Fungsi helper untuk mendapatkan nama lengkap jurusan
+const getMajorFullName = (abbreviation: string | undefined) => {
+    if (!abbreviation) return 'Informasi tidak tersedia';
+    return majorMap[abbreviation] || abbreviation; // Kembalikan singkatan jika tidak ditemukan di map
+};
+
+
 export function CekKelulusanForm() {
     const [nomorPendaftaran, setNomorPendaftaran] = useState('');
     const [result, setResult] = useState<KelulusanResult | null>(null);
@@ -74,11 +92,11 @@ export function CekKelulusanForm() {
                                 {result.status === 'LULUS' && (
                                     <>
                                         <h3 className="text-xl font-bold text-green-700">SELAMAT, ANDA DINYATAKAN LULUS!</h3>
-                                        {/* PERBAIKAN: Hanya tampilkan jika datanya ada */}
                                         {result.jalur_pendaftaran && (
                                             <p className="mt-2">Melalui jalur pendaftaran: <strong className="text-green-800">{result.jalur_pendaftaran}</strong>.</p>
                                         )}
-                                        <p className="mt-1">Anda diterima di Program Keahlian: <strong className="text-green-800">{result.jurusan_diterima}</strong>.</p>
+                                        <p className="mt-1">Anda diterima di Program Keahlian: <strong className="text-green-800">{getMajorFullName(result.jurusan_diterima)}</strong>.</p>
+                                        {/* PERUBAHAN: Menggunakan teks informasi baru */}
                                         <p className="text-sm mt-2">Silakan lanjutkan ke tahap Daftar Ulang mulai tanggal 10-11 Juli 2025 dengan datang langsung ke SMKN 9 Garut dan membawa materai 10 rb. 
                                             Jika pada waktu yang telah ditentukan siswa yang dinyatakan lolos tidak daftar ulang maka dianggap mengundurkan diri.</p>
                                     </>
@@ -86,12 +104,14 @@ export function CekKelulusanForm() {
                                 {result.status === 'TIDAK LULUS' && (
                                     <>
                                         <h3 className="text-xl font-bold text-red-700">MOHON MAAF</h3>
+                                        {/* PERUBAHAN: Menggunakan teks informasi baru */}
                                         <p className="mt-2">Berdasarkan hasil seleksi, Anda dinyatakan <strong>TIDAK LULUS</strong>. Tetap semangat dan jangan berkecil hati. Silahkan melanjutkan mendaftar di sekolah Swasta terdekat.</p>
                                     </>
                                 )}
                                 {result.status === 'PROSES SELEKSI' && (
                                     <>
                                         <h3 className="text-xl font-bold text-blue-700">STATUS: PROSES SELEKSI</h3>
+                                        {/* PERUBAHAN: Menggunakan teks informasi baru */}
                                         <p className="mt-2">Data Anda sudah kami terima. Hasil kelulusan akan diumumkan pada tanggal yang telah ditentukan. Mohon cek kembali secara berkala.</p>
                                     </>
                                 )}
