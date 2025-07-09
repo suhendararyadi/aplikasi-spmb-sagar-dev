@@ -1,30 +1,30 @@
-// import { AuthButton } from "@/components/auth-button";
+import { AuthButton } from "@/components/auth-button";
 import { SpmbHero } from "@/components/spmb-hero";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import Link from "next/link";
-import { School } from "lucide-react";
-// import { CekKelulusanForm } from "@/components/cek-kelulusan-form";
-// import { CountdownTimer } from "@/components/countdown-timer";
+import { School, Timer } from "lucide-react";
+import { CekKelulusanForm } from "@/components/cek-kelulusan-form";
+import { CountdownTimer } from "@/components/countdown-timer";
 // PERBAIKAN: Impor PocketBase secara langsung, bukan dari helper client.
-// import PocketBase from "pocketbase";
+import PocketBase from "pocketbase";
 
 // Fungsi untuk mengambil data pengaturan dari server
-// async function getAppSettings() {
-//   // PERBAIKAN: Buat instance PocketBase baru yang aman untuk server.
-//   const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL!);
-//   try {
-//     const settings = await pb.collection('pengaturan_app').getFirstListItem('');
-//     const announcementTime = new Date(settings.waktu_pengumuman);
-//     const isAnnouncementOpen = new Date() >= announcementTime;
-//     return { announcementTime, isAnnouncementOpen };
-//   } catch {
-//     // Jika gagal mengambil pengaturan, anggap semua sudah terbuka
-//     return { announcementTime: new Date(0), isAnnouncementOpen: true };
-//   }
-// }
+async function getAppSettings() {
+  // PERBAIKAN: Buat instance PocketBase baru yang aman untuk server.
+  const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL!);
+  try {
+    const settings = await pb.collection('pengaturan_app').getFirstListItem('');
+    const announcementTime = new Date(settings.waktu_pengumuman);
+    const isAnnouncementOpen = new Date() >= announcementTime;
+    return { announcementTime, isAnnouncementOpen };
+  } catch {
+    // Jika gagal mengambil pengaturan, anggap semua sudah terbuka
+    return { announcementTime: new Date(0), isAnnouncementOpen: true };
+  }
+}
 
 export default async function Home() {
-  //const { announcementTime, isAnnouncementOpen } = await getAppSettings();
+  const { announcementTime, isAnnouncementOpen } = await getAppSettings();
 
   return (
     <main className="min-h-screen flex flex-col items-center">
@@ -36,7 +36,7 @@ export default async function Home() {
               <School className="h-6 w-6 text-primary" />
               <span>SPMB SMKN 9 Garut</span>
             </Link>
-            {/* <AuthButton disabled={!isAnnouncementOpen} /> */}
+            <AuthButton disabled={!isAnnouncementOpen} />
           </div>
         </nav>
         {/* --- AKHIR HEADER --- */}
@@ -44,7 +44,7 @@ export default async function Home() {
         <div className="w-full max-w-5xl px-5 flex flex-col items-center">
           <SpmbHero />
           
-          {/* <section id="main-content" className="w-full pb-20 -mt-10 md:-mt-16">
+          <section id="main-content" className="w-full pb-20 -mt-10 md:-mt-16">
             {isAnnouncementOpen ? (
               // Jika waktu pengumuman sudah tiba, tampilkan form
               <CekKelulusanForm />
@@ -58,7 +58,7 @@ export default async function Home() {
                 <CountdownTimer targetDate={announcementTime.toISOString()} />
               </div>
             )}
-          </section> */}
+          </section>
         </div>
         
         {/* --- FOOTER --- */}
