@@ -2,7 +2,7 @@ import { createServerClient } from "@/lib/pocketbase/server";
 import { notFound, redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import PocketBase from 'pocketbase';
+import PocketBase, { ClientResponseError } from 'pocketbase'; // PERBAIKAN: Impor tipe error
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, FileText, CheckCircle, XCircle } from "lucide-react";
@@ -34,7 +34,7 @@ interface PageProps {
     params: { id: string; };
 }
 
-// PERBAIKAN: Tambahkan pemetaan dan fungsi helper di sini
+// Pemetaan dari singkatan ke nama jurusan lengkap
 const majorMap: { [key: string]: string } = {
     'DPIB': 'Desain Pemodelan dan Informasi Bangunan (DPIB)',
     'TEI': 'Teknik Elektronika Industri (TEI)',
@@ -50,13 +50,33 @@ const getMajorFullName = (abbreviation: string | undefined | null) => {
     return majorMap[abbreviation] || abbreviation;
 };
 
+// Fungsi ini sekarang mengambil data dari kedua collection
 async function getStudentData(id: string) {
     const pb = await createServerClient();
     if (!pb.authStore.isValid || pb.authStore.model?.role !== 'admin') {
         redirect('/auth/login');
     }
     try {
+        // Langkah 1: Ambil data utama dari collection 'users'
         const studentProfile: Profile = await pb.collection('users').getOne(id);
+
+        // Langkah 2: Ambil data status kelulusan dari collection 'status_kelulusan'
+        try {
+            const kelulusanRecord = await pb.collection('status_kelulusan').getFirstListItem(`nomor_pendaftaran = "${studentProfile.registration_number}"`);
+            // Gabungkan status kelulusan ke profil siswa
+            studentProfile.status_kelulusan = kelulusanRecord.status;
+        } catch (kelulusanError) {
+            // PERBAIKAN: Gunakan tipe yang lebih spesifik untuk menangani error
+            if (kelulusanError instanceof ClientResponseError) {
+                // Jika tidak ditemukan (404), itu bukan error fatal.
+                if (kelulusanError.status !== 404) {
+                    console.error("Error fetching public kelulusan status:", kelulusanError);
+                }
+            } else {
+                 console.error("An unexpected error occurred:", kelulusanError);
+            }
+        }
+
         return studentProfile;
     } catch (error) {
         console.error("Gagal mengambil profil siswa:", error);
@@ -112,7 +132,6 @@ export default async function StudentProfilePage({ params }: PageProps) {
                          <h3 className="font-semibold text-lg border-b pb-2 mb-4">Status Pendaftaran</h3>
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                             <DataRow label="Jalur Masuk" value={student.entry_path} />
-                            {/* PERBAIKAN: Gunakan helper untuk menampilkan nama lengkap jurusan */}
                             <DataRow label="Program Keahlian Diterima" value={getMajorFullName(student.accepted_major)} />
                             <DataRow label="Status Formulir">
                                 <Badge variant={student.status === 'selesai' ? 'default' : 'secondary'}>
@@ -148,6 +167,18 @@ export default async function StudentProfilePage({ params }: PageProps) {
 
                     <section>
                         <h3 className="font-semibold text-lg border-b pb-2 mb-4">Manajemen Admin</h3>
+                        <div className="mb-4">
+                            <DataRow label="Status Kelulusan Saat Ini">
+                                <Badge 
+                                    variant={
+                                        student.status_kelulusan === 'LULUS' ? 'default' :
+                                        student.status_kelulusan === 'TIDAK LULUS' ? 'destructive' : 'secondary'
+                                    }
+                                >
+                                    {student.status_kelulusan || 'Belum Ditentukan'}
+                                </Badge>
+                            </DataRow>
+                        </div>
                         <div className="p-4 bg-muted/50 rounded-lg">
                            <p className="text-sm text-muted-foreground mb-4">Ubah data administratif untuk siswa ini.</p>
                            <UpdateStatusForm 
