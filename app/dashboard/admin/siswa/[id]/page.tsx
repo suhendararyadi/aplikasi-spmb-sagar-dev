@@ -2,7 +2,7 @@ import { createServerClient } from "@/lib/pocketbase/server";
 import { notFound, redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import PocketBase, { ClientResponseError } from 'pocketbase'; // PERBAIKAN: Impor tipe error
+import PocketBase, { ClientResponseError } from 'pocketbase';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, FileText, CheckCircle, XCircle } from "lucide-react";
@@ -30,8 +30,11 @@ type Profile = {
     jalur_pendaftaran?: string | null;
 };
 
+// PERBAIKAN: Definisikan tipe props dengan params sebagai Promise
 interface PageProps {
-    params: { id: string; };
+    params: Promise<{
+        id: string;
+    }>;
 }
 
 // Pemetaan dari singkatan ke nama jurusan lengkap
@@ -57,18 +60,13 @@ async function getStudentData(id: string) {
         redirect('/auth/login');
     }
     try {
-        // Langkah 1: Ambil data utama dari collection 'users'
         const studentProfile: Profile = await pb.collection('users').getOne(id);
 
-        // Langkah 2: Ambil data status kelulusan dari collection 'status_kelulusan'
         try {
             const kelulusanRecord = await pb.collection('status_kelulusan').getFirstListItem(`nomor_pendaftaran = "${studentProfile.registration_number}"`);
-            // Gabungkan status kelulusan ke profil siswa
             studentProfile.status_kelulusan = kelulusanRecord.status;
         } catch (kelulusanError) {
-            // PERBAIKAN: Gunakan tipe yang lebih spesifik untuk menangani error
             if (kelulusanError instanceof ClientResponseError) {
-                // Jika tidak ditemukan (404), itu bukan error fatal.
                 if (kelulusanError.status !== 404) {
                     console.error("Error fetching public kelulusan status:", kelulusanError);
                 }
@@ -94,7 +92,9 @@ function DataRow({ label, value, children }: { label: string; value?: string | n
 }
 
 export default async function StudentProfilePage({ params }: PageProps) {
-    const student = await getStudentData(params.id);
+    // PERBAIKAN: Lakukan `await` pada params sebelum menggunakannya.
+    const { id } = await params;
+    const student = await getStudentData(id);
     
     const getFileUrl = (filename: string) => {
         return new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL!).files.getURL(student, filename);
