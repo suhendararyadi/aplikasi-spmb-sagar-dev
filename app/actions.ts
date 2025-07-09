@@ -12,25 +12,10 @@ export type KelulusanResult = {
     error: string;
 };
 
-// Fungsi helper untuk mengambil jadwal pengumuman
-async function getAnnouncementTime(pb: PocketBase) {
-    try {
-        const settings = await pb.collection('pengaturan_app').getFirstListItem('');
-        return new Date(settings.waktu_pengumuman);
-    } catch {
-        // Jika gagal, anggap pengumuman selalu terbuka agar tidak memblokir total
-        return new Date(0); 
-    }
-}
-
 export async function checkKelulusan(nomorPendaftaran: string): Promise<KelulusanResult> {
     const pb = new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL!);
-    
-    // PERBAIKAN: Cek waktu pengumuman terlebih dahulu
-    const announcementTime = await getAnnouncementTime(pb);
-    if (new Date() < announcementTime) {
-        return { error: 'Pengumuman belum dibuka. Silakan cek kembali sesuai jadwal.' };
-    }
+
+    // PERBAIKAN: Logika pengecekan waktu dihapus dari sini.
 
     if (!nomorPendaftaran) {
         return { error: 'Nomor pendaftaran tidak boleh kosong.' };

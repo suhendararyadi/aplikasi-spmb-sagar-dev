@@ -4,8 +4,7 @@ import { createServerClient } from "@/lib/pocketbase/server";
 import { LogoutButton } from "./logout-button";
 import { LayoutDashboard } from "lucide-react";
 
-// Terima prop 'disabled'
-export async function AuthButton({ disabled = false }: { disabled?: boolean }) {
+export async function AuthButton() {
   const pb = await createServerClient();
   const user = pb.authStore.model;
 
@@ -25,9 +24,8 @@ export async function AuthButton({ disabled = false }: { disabled?: boolean }) {
       </div>
     </div>
   ) : (
-    // Terapkan prop 'disabled' ke tombol login
-    <Button asChild size="sm" variant={"outline"} disabled={disabled}>
-      <Link href="/auth/login" aria-disabled={disabled} className={disabled ? "pointer-events-none" : ""}>
+    <Button asChild size="sm" variant={"outline"}>
+      <Link href="/auth/login">
         Login
       </Link>
     </Button>
