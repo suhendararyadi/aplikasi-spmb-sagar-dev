@@ -30,21 +30,31 @@ type Profile = {
     jalur_pendaftaran?: string | null;
 };
 
-// Definisikan tipe props dengan params sebagai Promise
 interface PageProps {
-    params: Promise<{
-        id: string;
-    }>;
+    params: { id: string; };
 }
 
-// Fungsi untuk mengambil data siswa berdasarkan ID
+// PERBAIKAN: Tambahkan pemetaan dan fungsi helper di sini
+const majorMap: { [key: string]: string } = {
+    'DPIB': 'Desain Pemodelan dan Informasi Bangunan (DPIB)',
+    'TEI': 'Teknik Elektronika Industri (TEI)',
+    'TITL': 'Teknik Instalasi Tenaga Listrik (TITL)',
+    'TKRO': 'Teknik Kendaraan Ringan Otomotif (TKRO)',
+    'TKJ': 'Teknik Jaringan Komputer dan Telekomunikasi (TKJ)',
+    'DKV': 'Desain Komunikasi Visual (DKV)',
+    'Proses Pemetaan': 'Dalam Proses Pemetaan',
+};
+
+const getMajorFullName = (abbreviation: string | undefined | null) => {
+    if (!abbreviation) return 'Informasi tidak tersedia';
+    return majorMap[abbreviation] || abbreviation;
+};
+
 async function getStudentData(id: string) {
     const pb = await createServerClient();
-    
     if (!pb.authStore.isValid || pb.authStore.model?.role !== 'admin') {
         redirect('/auth/login');
     }
-
     try {
         const studentProfile: Profile = await pb.collection('users').getOne(id);
         return studentProfile;
@@ -54,7 +64,6 @@ async function getStudentData(id: string) {
     }
 }
 
-// Komponen helper untuk menampilkan baris data agar rapi
 function DataRow({ label, value, children }: { label: string; value?: string | null; children?: React.ReactNode }) {
     return (
         <div className="flex flex-col gap-1">
@@ -64,10 +73,8 @@ function DataRow({ label, value, children }: { label: string; value?: string | n
     );
 }
 
-// Lakukan `await` pada params sebelum menggunakannya.
 export default async function StudentProfilePage({ params }: PageProps) {
-    const { id } = await params;
-    const student = await getStudentData(id);
+    const student = await getStudentData(params.id);
     
     const getFileUrl = (filename: string) => {
         return new PocketBase(process.env.NEXT_PUBLIC_POCKETBASE_URL!).files.getURL(student, filename);
@@ -97,7 +104,6 @@ export default async function StudentProfilePage({ params }: PageProps) {
                             <DataRow label="Nama Lengkap" value={student.name} />
                             <DataRow label="Nomor Pendaftaran" value={student.registration_number} />
                             <DataRow label="Asal Sekolah" value={student.school_origin} />
-                            {/* Baris ini akan menampilkan nilai "SPMB" atau "PAPS" dari database */}
                             <DataRow label="Jalur Pendaftaran" value={student.jalur_pendaftaran} />
                         </div>
                     </section>
@@ -106,7 +112,8 @@ export default async function StudentProfilePage({ params }: PageProps) {
                          <h3 className="font-semibold text-lg border-b pb-2 mb-4">Status Pendaftaran</h3>
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                             <DataRow label="Jalur Masuk" value={student.entry_path} />
-                            <DataRow label="Program Keahlian Diterima" value={student.accepted_major} />
+                            {/* PERBAIKAN: Gunakan helper untuk menampilkan nama lengkap jurusan */}
+                            <DataRow label="Program Keahlian Diterima" value={getMajorFullName(student.accepted_major)} />
                             <DataRow label="Status Formulir">
                                 <Badge variant={student.status === 'selesai' ? 'default' : 'secondary'}>
                                     {student.status === 'selesai' ? 'Selesai Mengisi' : 'Belum Mengisi'}

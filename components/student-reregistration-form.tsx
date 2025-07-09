@@ -29,6 +29,22 @@ type Profile = {
 
 const pb = createClient();
 
+// PERBAIKAN: Tambahkan pemetaan dan fungsi helper di sini juga
+const majorMap: { [key: string]: string } = {
+    'DPIB': 'Desain Pemodelan dan Informasi Bangunan (DPIB)',
+    'TEI': 'Teknik Elektronika Industri (TEI)',
+    'TITL': 'Teknik Instalasi Tenaga Listrik (TITL)',
+    'TKRO': 'Teknik Kendaraan Ringan Otomotif (TKRO)',
+    'TKJ': 'Teknik Jaringan Komputer dan Telekomunikasi (TKJ)',
+    'DKV': 'Desain Komunikasi Visual (DKV)',
+    'Proses Pemetaan': 'Dalam Proses Pemetaan',
+};
+
+const getMajorFullName = (abbreviation: string | undefined | null) => {
+    if (!abbreviation) return 'Informasi tidak tersedia';
+    return majorMap[abbreviation] || abbreviation;
+};
+
 // Komponen helper untuk menampilkan baris data sebagai teks informasi
 function DataRowDisplay({ label, value }: { label: string; value?: string | null }) {
     return (
@@ -68,7 +84,8 @@ const SubmittedDataSummary = ({ profile, onEdit }: { profile: Profile, onEdit: (
           <DataRowDisplay label="Asal Sekolah" value={profile.school_origin} />
           <DataRowDisplay label="Jalur Pendaftaran" value={profile.jalur_pendaftaran} />
           <DataRowDisplay label="Jalur Masuk" value={profile.entry_path} />
-          <DataRowDisplay label="Program Keahlian" value={profile.accepted_major} />
+          {/* PERBAIKAN: Gunakan helper untuk menampilkan nama lengkap jurusan */}
+          <DataRowDisplay label="Program Keahlian" value={getMajorFullName(profile.accepted_major)} />
           <div><Label className="text-muted-foreground">Konfirmasi Melanjutkan</Label><p className="font-semibold">{profile.is_reconfirm ? 'Ya, Melanjutkan' : 'Tidak'}</p></div>
           {profile.is_reconfirm === false && (
             <div><Label className="text-muted-foreground">Alasan Tidak Melanjutkan</Label><p className="font-semibold">{profile.rejection_reason}</p></div>
@@ -159,7 +176,8 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
                     <DataRowDisplay label="Asal Sekolah" value={profile.school_origin} />
                     <DataRowDisplay label="Jalur Pendaftaran" value={profile.jalur_pendaftaran} />
                     <DataRowDisplay label="Jalur Masuk" value={profile.entry_path} />
-                    <DataRowDisplay label="Diterima di Program Keahlian" value={profile.accepted_major} />
+                    {/* PERBAIKAN: Gunakan helper untuk menampilkan nama lengkap jurusan */}
+                    <DataRowDisplay label="Diterima di Program Keahlian" value={getMajorFullName(profile.accepted_major)} />
                 </div>
             </div>
 
@@ -196,7 +214,6 @@ export function StudentReregistrationForm({ profile }: { profile: Profile }) {
                 )}
                 
                 <div className="space-y-3">
-                  {/* PERUBAHAN: Menambahkan link unduh di sini */}
                   <div className="flex items-center justify-between">
                     <Label htmlFor="surat_pernyataan">Unggah Dokumen Surat Pernyataan</Label>
                     <a 
