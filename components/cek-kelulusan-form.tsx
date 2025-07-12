@@ -6,7 +6,8 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { checkKelulusan, type KelulusanResult } from '@/app/actions';
-import { Loader2, Search, PartyPopper, XCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Search, PartyPopper, XCircle, AlertCircle, MessageSquare } from 'lucide-react';
+import Link from 'next/link';
 
 // Pemetaan dari singkatan ke nama jurusan lengkap
 const majorMap: { [key: string]: string } = {
@@ -19,10 +20,20 @@ const majorMap: { [key: string]: string } = {
     'Proses Pemetaan': 'Dalam Proses Pemetaan',
 };
 
+// PERBAIKAN: Buat pemetaan baru untuk link WhatsApp
+const whatsAppLinks: { [key: string]: string } = {
+    'TEI': 'https://bit.ly/TEISagar',
+    'TITL': 'https://bit.ly/TITLSagar',
+    'TKRO': 'https://bit.ly/TKROSagar',
+    'DPIB': 'https://bit.ly/DPIBSagar',
+    'DKV': 'https://bit.ly/DKVSagar',
+    'TKJ': 'https://bit.ly/3IGxSRp'
+};
+
 // Fungsi helper untuk mendapatkan nama lengkap jurusan
 const getMajorFullName = (abbreviation: string | undefined) => {
     if (!abbreviation) return 'Informasi tidak tersedia';
-    return majorMap[abbreviation] || abbreviation; // Kembalikan singkatan jika tidak ditemukan di map
+    return majorMap[abbreviation] || abbreviation;
 };
 
 
@@ -96,22 +107,30 @@ export function CekKelulusanForm() {
                                             <p className="mt-2">Melalui jalur pendaftaran: <strong className="text-green-800">{result.jalur_pendaftaran}</strong>.</p>
                                         )}
                                         <p className="mt-1">Anda diterima di Program Keahlian: <strong className="text-green-800">{getMajorFullName(result.jurusan_diterima)}</strong>.</p>
-                                        {/* PERUBAHAN: Menggunakan teks informasi baru */}
-                                        <p className="text-sm mt-2">Silakan lanjutkan ke tahap Daftar Ulang mulai tanggal 10-11 Juli 2025 dengan datang langsung ke SMKN 9 Garut dan membawa materai 10 rb. 
-                                            Jika pada waktu yang telah ditentukan siswa yang dinyatakan lolos tidak daftar ulang maka dianggap mengundurkan diri.</p>
+                                        
+                                        {/* PERBAIKAN: Menampilkan instruksi & tombol grup WA */}
+                                        <div className="mt-4 pt-4 border-t border-green-200">
+                                            <p className="text-sm">
+                                                Langkah selanjutnya adalah bergabung ke grup WhatsApp jurusan Anda untuk mendapatkan informasi mengenai jadwal dan persyaratan daftar ulang.
+                                            </p>
+                                            <Button asChild className="mt-3 w-full sm:w-auto">
+                                                <Link href={whatsAppLinks[result.jurusan_diterima] || '#'} target="_blank">
+                                                    <MessageSquare className="mr-2 h-4 w-4" />
+                                                    Gabung Grup WA Jurusan
+                                                </Link>
+                                            </Button>
+                                        </div>
                                     </>
                                 )}
                                 {result.status === 'TIDAK LULUS' && (
                                     <>
                                         <h3 className="text-xl font-bold text-red-700">MOHON MAAF</h3>
-                                        {/* PERUBAHAN: Menggunakan teks informasi baru */}
                                         <p className="mt-2">Berdasarkan hasil seleksi, Anda dinyatakan <strong>TIDAK LULUS</strong>. Tetap semangat dan jangan berkecil hati. Silahkan melanjutkan mendaftar di sekolah Swasta terdekat.</p>
                                     </>
                                 )}
                                 {result.status === 'PROSES SELEKSI' && (
                                     <>
                                         <h3 className="text-xl font-bold text-blue-700">STATUS: PROSES SELEKSI</h3>
-                                        {/* PERUBAHAN: Menggunakan teks informasi baru */}
                                         <p className="mt-2">Data Anda sudah kami terima. Hasil kelulusan akan diumumkan pada tanggal yang telah ditentukan. Mohon cek kembali secara berkala.</p>
                                     </>
                                 )}
